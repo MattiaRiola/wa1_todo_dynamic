@@ -1,12 +1,11 @@
 # BigLab 2 - Class: 2021 WA1
 
-## Team name: TEAM_NAME
+## Team name: A short name
 
 Team members:
-* s123456 LASTNAME FIRSTNAME
-* s123456 LASTNAME FIRSTNAME 
-* s123456 LASTNAME FIRSTNAME
-* s123456 LASTNAME FIRSTNAME (delete line if not needed)
+* s280169 RIOLA MATTIA
+* s288200 SCAFFIDI MILITONE GABRIELE
+* s281554 SMORTI MARCO
 
 ## Instructions
 
