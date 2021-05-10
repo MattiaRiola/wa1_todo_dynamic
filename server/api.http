@@ -1,7 +1,7 @@
 GET http://localhost:3001/api/tasks/all/
 
 ###
-GET http://localhost:3001/api/tasks/deadline/2021-06-20%2000:00
+GET http://localhost:3001/api/tasks/deadline/2010-06-24%2001:20
 
 ###
 GET http://localhost:3001/api/tasks/important
@@ -29,10 +29,21 @@ Content-Type: application/json
 {        "description": "test api task",
                     "important": 1,
                     "isPrivate": 1,
-                    "deadline": "2021-08-06",
+                    "deadline": "2010-02-12",
                     "completed": 1,
                     "user": 1  } 
 
+###
+###
+POST http://localhost:3001/api/tasks/new
+Content-Type: application/json
+
+{        "description": "test api task",
+                    "important": 1,
+                    "isPrivate": 1,
+                    "deadline": "",
+                    "completed": 1,
+                    "user": 1  } 
 ###
 ###
 POST http://localhost:3001/api/tasks/new
@@ -50,11 +61,24 @@ Content-Type: application/json
 POST http://localhost:3001/api/tasks/update
 Content-Type: application/json
 
-{       "id": 9, 
+{       "id": 8, 
         "description": "updating task test from api.http",
                     "important": 0,
                     "isPrivate": 1,
-                    "deadline": "2021-05-12 22:50",
+                    "deadline": "2021-05-12 22:42",
+                    "completed": 1,
+                    "user": 1  } 
+
+###
+###
+POST http://localhost:3001/api/tasks/update
+Content-Type: application/json
+
+{       "id": 8, 
+        "description": "updating task test from api.http",
+                    "important": 0,
+                    "isPrivate": 1,
+                    "deadline": "",
                     "completed": 1,
                     "user": 1  } 
 
@@ -63,8 +87,8 @@ Content-Type: application/json
 POST http://localhost:3001/api/tasks/setCompleted
 Content-Type: application/json
 
-{       "id": 6, 
-        "completed": 1 }
+{       "id": 4, 
+        "completed": 1}
 
 ###
 POST http://localhost:3001/api/tasks/delete
