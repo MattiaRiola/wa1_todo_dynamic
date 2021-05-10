@@ -153,52 +153,55 @@ exports.addTask = (id, task) => {
                 reject(err);
                 return;
             }
-            console.log("Added task id: " + id);
         
             resolve(id);
         });
     });
 }
 
-// create a new task, by providing all relevant information –except the “id” that will be automatically assigned by the back-end;
-exports.createTask = (task) => {
-    return new Promise(async (resolve, reject) => {
-        let id;
-        try {
-            id = await getLastId();
-            id++;
-            console.log("adding task id: " + id);
-            //id = 50;
-        } catch (error) {
-            reject(error);
-        }
-
-        try {
-            await addTask(id,task);
-        }catch (error) {
-            reject(error);
-        }
-
-    });
-}
-
-
 // updatean existing task, by providing all relevant information (all the properties except the “id”
 // will overwrite the current properties of the existing task. The “id” will not change after the update)
-exports.updateTask = (id) => {
-            //TODO: complete
+exports.updateTask = (id, task) => {
+            return new Promise((resolve, reject) => {
+                const sql = 'UPDATE tasks SET description=?, important=?, private=?, deadline=?, completed=?, user=? WHERE id = ?';
+                db.all(sql, [task.description, task.important, task.isPrivate, task.deadline, task.completed, task.user, id], (err, rows) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    //console.log("Updated task id: " + id);
+                
+                    resolve(id);
+                });
+            });
         }
 
 // mark an existing task as completed/uncompleted;
 exports.setCompletedFieldInTask = (id, isCompleted) => {
-            //TODO: complete
-        }
+    return new Promise((resolve, reject) => {
+        const sql = 'UPDATE tasks SET completed=? WHERE id = ?';
+        db.all(sql, [isCompleted, id], (err, rows) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            //console.log("task " + id + " change completed status");
+            resolve(id);
+        });
+    });
+}
 
 // delete an existing task, given its “id”.
 exports.deleteTask = (id) => {
-            //TODO: complete
-        }
-
-// const query1_allTasks = "SELECT * FROM tasks";
-// const query2_futureDeadline = "SELECT * FROM tasks WHERE date('now') < date(deadline) OR date(deadline) IS NULL;"
-// const query5_tasksWithWord = `SELECT * FROM tasks WHERE description like '%${word}%';`;
+    return new Promise((resolve, reject) => {
+        const sql = 'DELETE FROM tasks WHERE id = ?';
+        db.all(sql, [id], (err, rows) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            console.log("task " + id + " deleted");
+            resolve(id);
+        });
+    });
+}
