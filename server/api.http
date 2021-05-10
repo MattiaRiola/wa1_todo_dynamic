@@ -1,5 +1,36 @@
-GET http://localhost:3001/api/alltasks
+GET http://localhost:3001/api/tasks/all/
 
 ###
+GET http://localhost:3001/api/tasks/deadline/2021-06-20%2000:00
+
+###
+GET http://localhost:3001/api/tasks/important
+
+###
+GET http://localhost:3001/api/tasks/private
+
+###
+GET http://localhost:3001/api/tasks/completed
+
+###
+GET http://localhost:3001/api/tasks/uncompleted
+
+###
+GET http://localhost:3001/api/tasks/next7days
+
+###
+GET http://localhost:3001/api/tasks/id/5
+
+###
+###
+POST http://localhost:3001/api/tasks/new
+Content-Type: application/json
+
+{        "description": "test api task",
+                    "important": 1,
+                    "isPrivate": 1,
+                    "deadline": "2021-08-06",
+                    "completed": 1,
+                    "user": 1  } 
 
 ###
