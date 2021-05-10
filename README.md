@@ -22,10 +22,142 @@ Finally, remember to add the `final` tag for the final submission, otherwise it 
 
 ## List of APIs offered by the server
 
-Provide a short description for API with the required parameters, follow the proposed structure.
+### Get filtered tasks
 
-* [HTTP Method] [URL, with any parameter]
-* [One-line about what this API is doing]
-* [Sample request, with body (if any)]
-* [Sample response, with body (if any)]
-* [Error responses, if any]
+* **GET** _/api/tasks/:filter/:firstParam?_
+* This API gives back the filtered tasks by reading "filter" variable and, if necessary a second parameter (for deadline tasks) 
+
+* **Sample request**:
+```
+GET http://localhost:3001/api/tasks/all
+GET http://localhost:3001/api/tasks/deadline/YYYY-MM-DD%HH:mm
+GET http://localhost:3001/api/tasks/important
+GET http://localhost:3001/api/tasks/private
+GET http://localhost:3001/api/tasks/completed
+GET http://localhost:3001/api/tasks/uncompleted
+GET http://localhost:3001/api/tasks/next7days
+GET http://localhost:3001/api/tasks/id/5
+```
+* **Sample response**:
+```
+200 OK
+GET http://localhost:3001/api/tasks/deadline/2021-06-20%2000:00
+```
+* **Error response**:
+```
+500 Internal Server Error
+{"Invalid deadline"}
+GET http://localhost:3001/api/tasks/deadline/thisisinvalidparam
+
+```
+
+### Add task
+
+* **POST** _/api/tasks/new_
+* This API adds a task contained in the body of the POST request in JSON format.
+* **Sample request**:
+``` 
+POST http://localhost:3001/api/tasks/new
+Content-Type: application/json
+
+{        
+    "description": "test api task",
+    "important": 1,
+    "isPrivate": 1,
+    "deadline": "2021-08-06",
+    "completed": 1,
+    "user": 1  
+}
+```
+* **Sample response**: 
+```
+200 OK
+POST http://localhost:3001/api/tasks/new
+```
+* **Error response**:
+```
+500 Internal Server Error
+POST http://localhost:3001/api/tasks/new
+{"errno":19,"code":"SQLITE_CONSTRAINT"}
+```
+###
+
+* **POST** _/api/tasks/update_
+* This API update an existing task with information contained in the body of the POST request in JSON format. The id of the task to update is written in the body.
+* **Sample request**:
+``` 
+POST http://localhost:3001/api/tasks/update
+Content-Type: application/json
+
+{   
+    "id": 9, 
+    "description": "updating task test from api.http",
+    "important": 0,
+    "isPrivate": 1,
+    "deadline": "2021-05-12 22:50",
+    "completed": 1,
+    "user": 1
+} 
+```
+* **Sample response**: 
+```
+200 OK
+POST http://localhost:3001/api/tasks/update
+```
+* **Error response**:
+```
+500 Internal Server Error
+POST http://localhost:3001/api/tasks/update
+{"errno":19,"code":"SQLITE_CONSTRAINT"}
+```
+
+
+###
+### Set completed/uncompleted
+
+* **POST** _/api/tasks/setCompleted_
+* This API sets the completed/uncompleted parameter of a task reading it from the body 
+* **Sample request**:
+``` 
+POST http://localhost:3001/api/tasks/setCompleted
+Content-Type: application/json
+
+{ 
+    "id": 6, 
+    "completed": 1 
+}
+```
+* **Sample response**: 
+```
+200 OK
+POST http://localhost:3001/api/tasks/setCompleted
+```
+* **Error response**:
+```
+500 Internal Server Error
+POST http://localhost:3001/api/tasks/setCompleted
+{"errno":19,"code":"SQLITE_CONSTRAINT"}
+```
+
+### Delete task
+
+* **POST** _/api/tasks/delete_
+* This API deletes a task which ID is contained in the body of the POST request in JSON format.
+* **Sample request**:
+``` 
+POST http://localhost:3001/api/tasks/delete
+Content-Type: application/json
+
+{   "id": 50}
+```
+* **Sample response**: 
+```
+200 OK
+POST http://localhost:3001/api/tasks/delete
+```
+* **Error response**:
+```
+500 Internal Server Error
+POST http://localhost:3001/api/tasks/delete
+{"errno":19,"code":"SQLITE_CONSTRAINT"}
+```
