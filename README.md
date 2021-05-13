@@ -24,19 +24,20 @@ Finally, remember to add the `final` tag for the final submission, otherwise it 
 
 ### Get filtered tasks
 
-* **GET** _/api/tasks/:filter/:firstParam?_
+* **GET** _/api/tasks/:filter/_
 * This API gives back the filtered tasks by reading "filter" variable and, if necessary a second parameter (for deadline tasks) 
 
 * **Sample request**:
 ```
 GET http://localhost:3001/api/tasks/all
-GET http://localhost:3001/api/tasks/deadline/YYYY-MM-DD%HH:mm
 GET http://localhost:3001/api/tasks/important
 GET http://localhost:3001/api/tasks/private
 GET http://localhost:3001/api/tasks/completed
 GET http://localhost:3001/api/tasks/uncompleted
 GET http://localhost:3001/api/tasks/next7days
-GET http://localhost:3001/api/tasks/id/5
+GET http://localhost:3001/api/tasks/search?id=5
+GET http://localhost:3001/api/tasks/deadline?time=YYYY-MM-DD%20HH:mm
+GET http://localhost:3001/api/tasks/deadline?time=YYYY-MM-DD
 ```
 * **Sample response**:
 ```
@@ -45,6 +46,10 @@ GET http://localhost:3001/api/tasks/deadline/2021-06-20%2000:00
 ```
 * **Error response**:
 ```
+404 Not Found
+{"No tasks with ID 34039"}
+GET http://localhost:3001/api/tasks/search?id=34039
+
 500 Internal Server Error
 {"Invalid deadline"}
 GET http://localhost:3001/api/tasks/deadline/thisisinvalidparam
@@ -106,6 +111,18 @@ POST http://localhost:3001/api/tasks/update
 ```
 * **Error response**:
 ```
+404 Not Found
+POST http://localhost:3001/api/tasks/update
+Content-Type: application/json
+{       "id": 900, 
+        "description": "updating task test from api.http",
+        "important": 0,
+        "isPrivate": 1,
+        "deadline": "2021-05-12 22:42",
+        "completed": 1,
+        "user": 1  
+} 
+
 500 Internal Server Error
 POST http://localhost:3001/api/tasks/update
 {"errno":19,"code":"SQLITE_CONSTRAINT"}
