@@ -1,10 +1,10 @@
 GET http://localhost:3001/api/tasks/all/
 
 ###
-GET http://localhost:3001/api/tasks/deadline/2021-05-25%2000:00
+GET http://localhost:3001/api/tasks/deadline?time=2021-04-14%2008:30
 
 ###
-GET http://localhost:3001/api/tasks/deadline/2021-05-22
+GET http://localhost:3001/api/tasks/deadline?time=2021-05-22
 
 ###
 GET http://localhost:3001/api/tasks/important
@@ -22,9 +22,14 @@ GET http://localhost:3001/api/tasks/uncompleted
 GET http://localhost:3001/api/tasks/next7days
 
 ###
-GET http://localhost:3001/api/tasks/id/5
+GET http://localhost:3001/api/tasks/search?id=2
 
 ###
+GET http://localhost:3001/api/tasks/search?id=1
+
+###
+GET http://localhost:3001/api/tasks/search?id=sdasd
+
 ###
 POST http://localhost:3001/api/tasks/new
 Content-Type: application/json
