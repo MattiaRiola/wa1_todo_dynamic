@@ -1,7 +1,10 @@
 GET http://localhost:3001/api/tasks/all/
 
 ###
-GET http://localhost:3001/api/tasks/deadline/2010-06-24%2001:20
+GET http://localhost:3001/api/tasks/deadline/2021-05-25%2000:00
+
+###
+GET http://localhost:3001/api/tasks/deadline/2021-05-22
 
 ###
 GET http://localhost:3001/api/tasks/important

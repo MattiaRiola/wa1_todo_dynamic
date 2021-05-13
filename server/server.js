@@ -37,21 +37,27 @@ app.get('/api/tasks/:filter/:firstParam?', (req, res) => {
                 .catch((error) => { res.status(500).json(error); });
             break;
         case "deadline":
-            console.log("this is the date you are asking for: " + dayjs(firstParam).toString());
-            if (!(dayjs(firstParam, [
-                "YYYY-MM-DD",
+            console.log("this is the date you are asking for: " + firstParam);
+
+            if (dayjs(firstParam, [
                 "YYYY-MM-DD HH:mm",
                 "YYYY-MM-DD H:m",
                 "YYYY-MM-DD HH:m",
-                "YYYY-MM-DD H:mm",
-            ], true).isValid())
-            ) {
+                "YYYY-MM-DD H:mm"
+            ], true).isValid()) {
+                dao.getTasksByDeadline(firstParam)
+                    .then((tasks) => { res.json(tasks); })
+                    .catch((error) => { res.status(500).json(error); });
+            } else if (dayjs(firstParam, 'YYYY-MM-DD', true).isValid()) {
+                let from = firstParam+ " 00:00";
+                let to = firstParam+ " 23:59";
+                dao.getTasksByDeadlineRange(from, to)
+                    .then((tasks) => { res.json(tasks); })
+                    .catch((error) => { res.status(500).json(error); });
+            } else {
                 res.status(500).json("Invalid deadline");
                 return;
             }
-            dao.getTasksByDeadline(firstParam)
-                .then((tasks) => { res.json(tasks); })
-                .catch((error) => { res.status(500).json(error); });
             break;
         case "important":
             dao.getImportantTasks()

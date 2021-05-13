@@ -39,6 +39,21 @@ exports.getTasksByDeadline = (deadline) => {
     });
 };
 
+// get tasks with a given deadline range
+exports.getTasksByDeadlineRange = (left,right) => {
+    return new Promise((resolve, reject) => {
+        const sql = 'SELECT * FROM tasks WHERE deadline>=? AND deadline<?';
+        db.all(sql, [left,right], (err, rows) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            const tasks = rows.map((t) => ({ id: t.id, description: t.description, important: t.important, private: t.private, deadline: t.deadline, completed: t.completed, user: t.user }));
+            resolve(tasks);
+        });
+    });
+};
+
 // get tasks with filter "IMPORTANT"
 exports.getImportantTasks = () => {
     return new Promise((resolve, reject) => {
