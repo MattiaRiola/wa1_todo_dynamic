@@ -17,18 +17,17 @@ app.use(morgan('dev')); //to see server side some logs
 app.use(express.json()); //to parse the tasks from string to json
 
 //to install for validating (npm install --save express-validator)
-const { body, validationResult } = require('express-validator');
+const { body, validationResult, query } = require('express-validator');
 
 
 app.get('/', (req, res) => {
     res.send('Hello World, from your server');
 });
 
-
-
-app.get('/api/tasks/:filter/:firstParam?', (req, res) => {
+app.get('/api/tasks/:filter', (req, res) => {
     const filter = req.params.filter;
-    const firstParam = req.params.firstParam;
+    const deadline = req.query.time;
+    const id = req.query.id;
     switch (filter) {
         case "all":
             dao.listTasks()
@@ -37,51 +36,101 @@ app.get('/api/tasks/:filter/:firstParam?', (req, res) => {
                 .catch((error) => { res.status(500).json(error); });
             break;
         case "deadline":
-            console.log("this is the date you are asking for: " + dayjs(firstParam).toString());
-            if (!(dayjs(firstParam, [
-                "YYYY-MM-DD",
+            console.log("this is the date you are asking for: " + deadline);
+
+            if (dayjs(deadline, [
                 "YYYY-MM-DD HH:mm",
                 "YYYY-MM-DD H:m",
                 "YYYY-MM-DD HH:m",
-                "YYYY-MM-DD H:mm",
-            ], true).isValid())
-            ) {
+                "YYYY-MM-DD H:mm"
+            ], true).isValid()) {
+                dao.getTasksByDeadline(deadline)
+                    .then((tasks) => {
+                        if (Object.entries(tasks).length === 0)
+                            res.status(404).json("No tasks with deadline " + deadline);
+                        else
+                            res.json(tasks);
+                    })
+                    .catch((error) => { res.status(500).json(error); });
+            } else if (dayjs(deadline, 'YYYY-MM-DD', true).isValid()) {
+                let from = deadline + " 00:00";
+                let to = deadline + " 23:59";
+                dao.getTasksByDeadlineRange(from, to)
+                    .then((tasks) => {
+                        if (Object.entries(tasks).length === 0)
+                            res.status(404).json("No tasks with deadline " + deadline);
+                        else
+                            res.json(tasks);
+                    })
+                    .catch((error) => { res.status(500).json(error); });
+            } else {
                 res.status(500).json("Invalid deadline");
                 return;
             }
-            dao.getTasksByDeadline(firstParam)
-                .then((tasks) => { res.json(tasks); })
-                .catch((error) => { res.status(500).json(error); });
             break;
         case "important":
             dao.getImportantTasks()
-                .then((tasks) => { res.json(tasks); })
+                .then((tasks) => {
+                    if (Object.entries(tasks).length === 0)
+                        res.status(404).json("No important tasks");
+                    else
+                        res.json(tasks);
+                })
                 .catch((error) => { res.status(500).json(error); });
             break;
         case "private":
             dao.getPrivateTasks()
-                .then((tasks) => { res.json(tasks); })
+                .then((tasks) => {
+                    if (Object.entries(tasks).length === 0)
+                        res.status(404).json("No private tasks");
+                    else 
+                        res.json(tasks);
+                })
                 .catch((error) => { res.status(500).json(error); });
             break;
         case "completed":
             dao.getCompletedTasks()
-                .then((tasks) => { res.json(tasks); })
+                .then((tasks) => {
+                    if (Object.entries(tasks).length === 0)
+                        res.status(404).json("No completed tasks");
+                    else
+                        res.json(tasks);
+                })
                 .catch((error) => { res.status(500).json(error); });
             break;
         case "uncompleted":
             dao.getUncompletedTasks()
-                .then((tasks) => { res.json(tasks); })
+                .then((tasks) => {
+                    if (Object.entries(tasks).length === 0)
+                        res.status(404).json("No uncompleted tasks");
+                    else
+                        res.json(tasks);
+                })
                 .catch((error) => { res.status(500).json(error); });
             break;
         case "next7days":
             dao.getNext7DaysTasks()
-                .then((tasks) => { res.json(tasks); })
+                .then((tasks) => {
+                    if (Object.entries(tasks).length === 0)
+                        res.status(404).json("No tasks in 7days");                    
+                    else
+                        res.json(tasks);
+                })
                 .catch((error) => { res.status(500).json(error); });
             break;
-        case "id":
-            dao.getTaskById(firstParam)
-                .then((tasks) => { res.json(tasks); })
-                .catch((error) => { res.status(500).json(error); });
+        case "search":
+            if (!isNaN(id)) {
+                dao.getTaskById(id)
+                    .then((tasks) => {
+                        if (Object.entries(tasks).length === 0)
+                            res.status(404).json("No tasks with id " + id);
+                        else
+                            res.json(tasks);
+                    })
+                    .catch((error) => { res.status(500).json(error); });
+            } else {
+                res.status(500).json("Invalid ID");
+            }
             break;
     }
 });
@@ -195,6 +244,13 @@ app.post('/api/tasks/update',
             completed: completed,
             user: user
         };
+
+        dao.getTaskById(id)
+                    .then((tasks) => {
+                        if (Object.entries(tasks).length === 0)
+                            res.status(404).json("No tasks with id " + id);
+                    })
+                    .catch((error) => { res.status(500).json(error); });
 
         try {
             await dao.updateTask(id, task);

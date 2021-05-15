@@ -1,7 +1,13 @@
 GET http://localhost:3001/api/tasks/all/
 
 ###
-GET http://localhost:3001/api/tasks/deadline/2010-06-24%2001:20
+GET http://localhost:3001/api/tasks/deadline?time=2021-04-14%2008:30
+
+### task with no existing date
+GET http://localhost:3001/api/tasks/deadline?time=2021-04-14%2008:31
+
+###
+GET http://localhost:3001/api/tasks/deadline?time=2021-05-22
 
 ###
 GET http://localhost:3001/api/tasks/important
@@ -18,11 +24,16 @@ GET http://localhost:3001/api/tasks/uncompleted
 ###
 GET http://localhost:3001/api/tasks/next7days
 
-###
-GET http://localhost:3001/api/tasks/id/5
+### search task with id 
+GET http://localhost:3001/api/tasks/search?id=2
 
-###
-###
+### search task with id (it doesn't find the task)
+GET http://localhost:3001/api/tasks/search?id=9000
+
+### search a task id with invalid id
+GET http://localhost:3001/api/tasks/search?id=sdasd
+
+### add new task with a deadline
 POST http://localhost:3001/api/tasks/new
 Content-Type: application/json
 
@@ -34,18 +45,18 @@ Content-Type: application/json
                     "user": 1  } 
 
 ###
-###
+### add new task without a deadline
 POST http://localhost:3001/api/tasks/new
 Content-Type: application/json
 
 {        "description": "test api task",
-                    "important": 1,
-                    "isPrivate": 1,
+                    "important": 0,
+                    "isPrivate": 0,
                     "deadline": "",
-                    "completed": 1,
+                    "completed": 0,
                     "user": 1  } 
 ###
-###
+### add new task
 POST http://localhost:3001/api/tasks/new
 Content-Type: application/json
 
@@ -56,8 +67,8 @@ Content-Type: application/json
                     "completed": 1,
                     "user": 1  } 
 
-###
-###
+
+###update of a task
 POST http://localhost:3001/api/tasks/update
 Content-Type: application/json
 
@@ -68,8 +79,18 @@ Content-Type: application/json
                     "deadline": "2021-05-12 22:42",
                     "completed": 1,
                     "user": 1  } 
-
 ###
+### update of an unexisting task
+POST http://localhost:3001/api/tasks/update
+Content-Type: application/json
+
+{       "id": 9000, 
+        "description": "updating task test from api.http",
+                    "important": 0,
+                    "isPrivate": 1,
+                    "deadline": "2021-05-12 22:42",
+                    "completed": 1,
+                    "user": 1  } 
 ###
 POST http://localhost:3001/api/tasks/update
 Content-Type: application/json
