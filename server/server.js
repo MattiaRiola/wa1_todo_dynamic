@@ -16,6 +16,7 @@ const app = express();
 app.use(morgan('dev')); //to see server side some logs
 app.use(express.json()); //to parse the tasks from string to json
 
+
 //to install for validating (npm install --save express-validator)
 const { body, validationResult, query } = require('express-validator');
 
@@ -83,7 +84,7 @@ app.get('/api/tasks/:filter', (req, res) => {
                 .then((tasks) => {
                     if (Object.entries(tasks).length === 0)
                         res.status(404).json("No private tasks");
-                    else 
+                    else
                         res.json(tasks);
                 })
                 .catch((error) => { res.status(500).json(error); });
@@ -112,7 +113,7 @@ app.get('/api/tasks/:filter', (req, res) => {
             dao.getNext7DaysTasks()
                 .then((tasks) => {
                     if (Object.entries(tasks).length === 0)
-                        res.status(404).json("No tasks in 7days");                    
+                        res.status(404).json("No tasks in 7days");
                     else
                         res.json(tasks);
                 })
@@ -246,11 +247,11 @@ app.post('/api/tasks/update',
         };
 
         dao.getTaskById(id)
-                    .then((tasks) => {
-                        if (Object.entries(tasks).length === 0)
-                            res.status(404).json("No tasks with id " + id);
-                    })
-                    .catch((error) => { res.status(500).json(error); });
+            .then((tasks) => {
+                if (Object.entries(tasks).length === 0)
+                    res.status(404).json("No tasks with id " + id);
+            })
+            .catch((error) => { res.status(500).json(error); });
 
         try {
             await dao.updateTask(id, task);
