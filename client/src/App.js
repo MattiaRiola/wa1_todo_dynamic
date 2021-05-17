@@ -45,14 +45,6 @@ function marshallTask(task) {
  * Transform a client-readable task in a server-readable one 
  */
 function unmarshallTask(task) {
-  /* 
-    {        "description": "inserting new task test from api.http",
-    "important": 0,
-    "isPrivate": 1,
-    "deadline": "2021-05-12 22:50",
-    "completed": 1,
-    "user": 1  } 
-   */
   let taskServer = {
     description: task.description,
     important: task.urgent ? 1 : 0,
@@ -87,10 +79,15 @@ function App() {
   /**
    * Server tasks
    */
-  //const [serverTasks, setServerTasks] = useState();
-  const [updatedTask, setUpdatedTask] = useState(undefined);
-  const [newTaskOnServer, setNewTaskOnServer] = useState(false);
+  //added task stores the new task added by the client clicking on '+' button
+  const [addedTask, setAddedTask] = useState(undefined);
+  //boolean variables that indicates if the are changes on server side (in this way the client will reload the tasks)
+  const [serverChanges, setServerChanges] = useState(false);
 
+  /**
+   * GET request to the server to get ALL tasks
+   * It is called anytime "serverChanges" is updated, which means that it is called anytime there is a modification on the server
+   */
   useEffect(() => {
     const fetchTasks = async () => {
       getAllTasks().then((result) => {
@@ -100,35 +97,28 @@ function App() {
         });
         setTasks(marshallResult);
       });
-      // await setServerTasks(getAllTasks());
-      // serverTasks.then( listOfTasks => listOdTasks.)
     }
 
     fetchTasks();
-  }, [newTaskOnServer]);
-
-  let exampleTask = {
-    description: "test api task",
-    important: 1,
-    isPrivate: 1,
-    deadline: "2010-02-12",
-    completed: 1,
-    user: 1
-  };
-
+  }, [serverChanges]);
+  
+/**
+ * POST request to the server to insert a new task added clicking on plus button
+ * this effect set state variable 'serverChanges' that trigger previous useEffect (that call fetchTasks)
+ */
   useEffect(() => {
     const sendTask = async () => {
-      if (updatedTask !== undefined)
+      if (addedTask !== undefined)
         fetch('api/tasks/new', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(updatedTask)
+          body: JSON.stringify(addedTask)
         })
           .then(() => {
-            console.log("task " + updatedTask + "added"); 
-            setNewTaskOnServer((old) => !old);
+            console.log("task " + addedTask + "added");
+            setServerChanges((old) => !old);
           })
           .catch(function (error) {
             console.log('Failed to store data on server: ', error);
@@ -137,12 +127,14 @@ function App() {
     }
 
     sendTask();
-  }, [updatedTask]);
+  }, [addedTask]);
 
+  //END SERVER TASKS FUNCTIONS
+  
   const addTask = (task) => {
 
     setTasks(oldTasks => [...oldTasks, task]);
-    setUpdatedTask(unmarshallTask(task));
+    setAddedTask(unmarshallTask(task));
   }
 
   const deleteTask = (id) => {
