@@ -27,7 +27,42 @@ const fakeTasks = [
   { id: 13, description: 'my task  in 1h', date: dayjs().add(1, 'hour'), urgent: false, private: false },
   { id: 14, description: 'No date task', date: undefined, urgent: true, private: true }
 ];
+/**
+ * Transform a task received from the server to a client-readable task
+ */
+function marshallTask(task) {
+  let taskClient = {
+    id: task.id,
+    description: task.description,
+    date: dayjs(task.deadline).isValid() ? dayjs(task.deadline) : undefined,
+    urgent: task.important !== 0 ? true : false,
+    private: task.private !== 0 ? true : false,
+  }
+  return taskClient;
+}
 
+/**
+ * Transform a client-readable task in a server-readable one 
+ */
+function unmarshallTask(task) {
+  /* 
+    {        "description": "inserting new task test from api.http",
+    "important": 0,
+    "isPrivate": 1,
+    "deadline": "2021-05-12 22:50",
+    "completed": 1,
+    "user": 1  } 
+   */
+  let taskServer = {
+    description: task.description,
+    important: task.urgent ? 1 : 0,
+    isPrivate: task.private ? 1 : 0,
+    deadline: task.date !== undefined ? task.date.format('YYYY-MM-DD HH:mm') : "",
+    completed: 0,
+    user: 1
+  }
+  return taskServer;
+}
 
 function App() {
   /**
@@ -54,97 +89,99 @@ function App() {
    */
   //const [serverTasks, setServerTasks] = useState();
   const [updatedTask, setUpdatedTask] = useState(undefined);
+  const [newTaskOnServer, setNewTaskOnServer] = useState(false);
 
   useEffect(() => {
     const fetchTasks = async () => {
-      getAllTasks().then((result) => setTasks(result));
+      getAllTasks().then((result) => {
+        let marshallResult = [];
+        result.forEach(task => {
+          marshallResult.push(marshallTask(task));
+        });
+        setTasks(marshallResult);
+      });
       // await setServerTasks(getAllTasks());
       // serverTasks.then( listOfTasks => listOdTasks.)
     }
 
     fetchTasks();
-  }, [updatedTask]);
-  
-  let exampleTask = {        description: "test api task",
-  important: 1,
-  isPrivate: 1,
-  deadline: "2010-02-12",
-  completed: 1,
-  user: 1  } ;
+  }, [newTaskOnServer]);
+
+  let exampleTask = {
+    description: "test api task",
+    important: 1,
+    isPrivate: 1,
+    deadline: "2010-02-12",
+    completed: 1,
+    user: 1
+  };
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      if(updatedTask !== undefined)
+    const sendTask = async () => {
+      if (updatedTask !== undefined)
         fetch('api/tasks/new', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedTask) } )
-        .then ( console.log("task " + updatedTask + "added"))
-      .catch(function (error) {
-          console.log('Failed to store data on server: ', error);
-        });
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updatedTask)
+        })
+          .then(() => {
+            console.log("task " + updatedTask + "added"); 
+            setNewTaskOnServer((old) => !old);
+          })
+          .catch(function (error) {
+            console.log('Failed to store data on server: ', error);
+          });
+
     }
 
-    fetchTasks();
+    sendTask();
   }, [updatedTask]);
 
   const addTask = (task) => {
-    
+
     setTasks(oldTasks => [...oldTasks, task]);
-    setUpdatedTask(task);
-
-
-    // fetch('api/tasks/new', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(exampleTask) } )
-    // .catch(function (error) {
-    //     console.log('Failed to store data on server: ', error);
-    //   });
-
-    }
-
-  const deleteTask = (id) => {
-      setTasks(oldTasks => oldTasks.filter(task => task.id !== id));
-    }
-
-    const editTask = (task) => {
-      setTasks(oldTasks => {
-        return oldTasks.map((tk) => {
-          if (tk.id === task.id)
-            return { id: task.id, description: task.description, date: task.date, urgent: task.urgent, private: task.private };
-          else
-            return tk;
-        });
-      })
-    }
-
-    return (
-      <Router>
-        <MyNavbar setOpen={setOpen} open={open} />
-        <Container fluid>
-          <Row className="row-height">
-            <MyAside open={open} />
-            <Switch>
-              <Route path="/:filterName" render={({ match }) =>
-                (<MyMainContent tasks={tasks} filter={match.params.filterName} deleteTask={deleteTask} editTask={editTask} />)
-              } />
-              <Route exact path="/" render={() =>
-                <MyMainContent tasks={tasks} filter={"All"} deleteTask={deleteTask} editTask={editTask} />
-              } />
-            </Switch>
-          </Row>
-          <MyModal show={show} handleClose={handleClose} addTask={addTask} lastId={lastId} setLastId={setLastId} />
-          <button className="btn btn-lg btn-primary rounded-circle radius" variant="primary" onClick={() => { handleShow() }}>+</button>
-        </Container>
-      </Router>
-
-    );
+    setUpdatedTask(unmarshallTask(task));
   }
 
+  const deleteTask = (id) => {
+    setTasks(oldTasks => oldTasks.filter(task => task.id !== id));
+  }
 
-  export default App;
+  const editTask = (task) => {
+    setTasks(oldTasks => {
+      return oldTasks.map((tk) => {
+        if (tk.id === task.id)
+          return { id: task.id, description: task.description, date: task.date, urgent: task.urgent, private: task.private };
+        else
+          return tk;
+      });
+    })
+  }
+
+  return (
+    <Router>
+      <MyNavbar setOpen={setOpen} open={open} />
+      <Container fluid>
+        <Row className="row-height">
+          <MyAside open={open} />
+          <Switch>
+            <Route path="/:filterName" render={({ match }) =>
+              (<MyMainContent tasks={tasks} filter={match.params.filterName} deleteTask={deleteTask} editTask={editTask} />)
+            } />
+            <Route exact path="/" render={() =>
+              <MyMainContent tasks={tasks} filter={"All"} deleteTask={deleteTask} editTask={editTask} />
+            } />
+          </Switch>
+        </Row>
+        <MyModal show={show} handleClose={handleClose} addTask={addTask} lastId={lastId} setLastId={setLastId} />
+        <button className="btn btn-lg btn-primary rounded-circle radius" variant="primary" onClick={() => { handleShow() }}>+</button>
+      </Container>
+    </Router>
+
+  );
+}
+
+
+export default App;

@@ -2,7 +2,7 @@ async function getAllTasks() {
     return fetch('/api/tasks/all')
             .then((response) => {
                 if(response.ok) {
-                    let type = response.headers.get('Content-Type');
+                    //let type = response.headers.get('Content-Type');
                     // if(type !== 'application/json'){
                     //   throw new TypeError(`Expected JSON, got ${type}`);
                     // }
