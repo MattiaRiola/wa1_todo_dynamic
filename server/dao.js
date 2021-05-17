@@ -87,7 +87,7 @@ exports.getPrivateTasks = () => {
 // get tasks with filter "COMPLETE"
 exports.getCompletedTasks = () => {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM tasks WHERE complete = 1';
+        const sql = 'SELECT * FROM tasks WHERE completed = 1';
         db.all(sql, [], (err, rows) => {
             if (err) {
                 reject(err);
@@ -102,7 +102,7 @@ exports.getCompletedTasks = () => {
 // get tasks with filter "UNCOMPLETE"
 exports.getUncompletedTasks = () => {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM tasks WHERE complete = 0';
+        const sql = 'SELECT * FROM tasks WHERE completed = 0';
         db.all(sql, [], (err, rows) => {
             if (err) {
                 reject(err);
