@@ -5,7 +5,7 @@ import Form from 'react-bootstrap/Form';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MyModal from './MyModal.js';
 //import API from './API.js';
 
@@ -135,13 +135,20 @@ function TaskRemove(props) {
 function TaskDescription(props) {
   //let currentTask = { id: props.id, description: props.description, date: props.date, urgent: props.urgent, private: props.private, completed: props.complete };
   let [completed, setCompleted] = useState(props.completed);
+  let [modified, setModified] = useState(false);
+  useEffect(() => {
+    if(modified) {
+      props.setCompletedTask(props.id, completed);
+      setModified(false);
+    }
+  },[completed,modified,props]);
 
   return (
     <>
       <span className="p-0">
         <Form.Check inline type="checkbox" id="gridCheck3" onChange={() => {
           setCompleted((old) => !old);
-          props.setCompletedTask(props.id, !props.completed);
+          setModified((old) => !old);
         }}
         checked = {completed} ></Form.Check>
         {(props.urgent) ? (<span className="important-text">{props.description}</span>) : props.description}
