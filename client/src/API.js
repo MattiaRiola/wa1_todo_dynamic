@@ -79,7 +79,24 @@ async function addNewTask(addedTask) {
         });
 };
 
-const API = { addNewTask, marshallTask, unmarshallTask, getFilteredTasks };
+async function deleteTask(id) {
+
+    return fetch('api/tasks/delete', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({id: id})
+    })
+        .then(() => {
+            console.log("task " + id + "deleted");
+        })
+        .catch(function (error) {
+            console.log('Failed to delete data on server: ', error);
+        });
+};
+
+const API = { addNewTask, marshallTask, unmarshallTask, getFilteredTasks, deleteTask };
 
 
 export default API;

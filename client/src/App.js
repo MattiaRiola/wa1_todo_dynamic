@@ -85,30 +85,10 @@ function App() {
         setDirty(false);
         setTasks(marshallResult);
         //setLoading(false);
-        
-      // API.getAllTasks().then(newT => {
-      //   let marshallResult = [];
-      //   newT.forEach(task => {
-      //     marshallResult.push(API.marshallTask(task));
-      //   });
-      //   setTasks(marshallResult);
-      //   //setLoading(false);
-      //   setDirty(false);
       })
       .catch( err => console.log(err) );
     }
   }, [tasks.length, dirty, selectedFilter]);
-
-  // useEffect(() => {
-  //       API.getFilteredTasks(selectedFilter).then(newT => {
-  //         let marshallResult = [];
-  //         newT.forEach(task => {
-  //           marshallResult.push(API.marshallTask(task));
-  //         });
-  //         setTasks(marshallResult);
-  //         //setLoading(false);
-  //         setDirty(false);
-  // }, [selectedFilter]);
 
   const addTask = (task) => {
     //UPDATE LOCAL TASKS WITH NEW TASK (removed if something goes wrong in the POST)
@@ -126,6 +106,8 @@ function App() {
 
   const deleteTask = (id) => {
     setTasks(oldTasks => oldTasks.filter(task => task.id !== id));
+
+    API.deleteTask(id).then(() => { setDirty(true); });
   }
 
   const editTask = (task) => {
