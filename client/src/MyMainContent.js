@@ -7,6 +7,7 @@ import Row from 'react-bootstrap/Row';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import MyModal from './MyModal.js';
+//import API from './API.js';
 
 let isToday = require('dayjs/plugin/isToday')
 dayjs.extend(isToday)
@@ -38,7 +39,7 @@ function MyMainContent(props) {
     <>
       <Col className="py-2 px-lg-3 border bg-light" id="menu-filter">
         <Title filter={props.filter} />
-        <TaskTable tasks={props.tasks} filter={props.filter} deleteTask={props.deleteTask} editTask={props.editTask}/>
+        <TaskTable tasks={props.tasks} filter={props.filter} deleteTask={props.deleteTask} editTask={props.editTask} setCompletedTask={props.setCompletedTask} />
       </Col>
     </>
   );
@@ -59,9 +60,11 @@ function TaskTable(props) {
           description={task.description}
           date={task.date}
           urgent={task.urgent}
-          private={task.private} 
+          private={task.private}
+          completed={task.completed}
           deleteTask={props.deleteTask}
-          editTask={props.editTask} />)}
+          editTask={props.editTask}
+          setCompletedTask={props.setCompletedTask} />)}
       </ListGroup>
 
     </>
@@ -74,19 +77,20 @@ function TaskRow(props) {
       <ListGroup.Item as="li" className="transparent-bg">
         <Container>
           <Row>
-              <Col sm lg="5" >
-                <TaskDescription description={props.description} urgent={props.urgent} />
-              </Col>
-              <Col>
-                <TaskPrivate private={props.private} />
-              </Col>
-              <Col md="auto">
-                <TaskDate date={props.date} />
-              </Col>
-              <Col md="auto">
-                <TaskEditing id={props.id} description={props.description} urgent={props.urgent} private={props.private} date={props.date} editTask={props.editTask}/>
-                <TaskRemove id={props.id} deleteTask={props.deleteTask}/>
-              </Col>
+            <Col sm lg="5" >
+              <TaskDescription description={props.description} urgent={props.urgent} completed={props.completed}
+                id={props.id} setCompletedTask={props.setCompletedTask} />
+            </Col>
+            <Col>
+              <TaskPrivate private={props.private} />
+            </Col>
+            <Col md="auto">
+              <TaskDate date={props.date} />
+            </Col>
+            <Col md="auto">
+              <TaskEditing id={props.id} description={props.description} urgent={props.urgent} private={props.private} date={props.date} editTask={props.editTask} />
+              <TaskRemove id={props.id} deleteTask={props.deleteTask} />
+            </Col>
           </Row>
         </Container>
       </ListGroup.Item>
@@ -101,17 +105,17 @@ function TaskEditing(props) {
   const [show, setShow] = useState(false);
   const handleClose = () => setShow(false);
 
-  let currentTask = {id: props.id, description: props.description, date: props.date, urgent: props.urgent, private: props.private};
+  let currentTask = { id: props.id, description: props.description, date: props.date, urgent: props.urgent, private: props.private };
   return (
     <>
-    <span onClick={() => {
-      setShow(true);
-      }}> 
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-pencil-fill" viewBox="0 0 16 16">
-        <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z" />
-      </svg>
-    </span>
-    <MyModal show={show} handleClose={handleClose} currentTask={currentTask} editTask={props.editTask}/>
+      <span onClick={() => {
+        setShow(true);
+      }}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-pencil-fill" viewBox="0 0 16 16">
+          <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z" />
+        </svg>
+      </span>
+      <MyModal show={show} handleClose={handleClose} currentTask={currentTask} editTask={props.editTask} />
     </>
   );
 }
@@ -129,10 +133,17 @@ function TaskRemove(props) {
 }
 
 function TaskDescription(props) {
+  //let currentTask = { id: props.id, description: props.description, date: props.date, urgent: props.urgent, private: props.private, completed: props.complete };
+  let [completed, setCompleted] = useState(props.completed);
+
   return (
     <>
       <span className="p-0">
-        <Form.Check inline type="checkbox" id="gridCheck3"></Form.Check>
+        <Form.Check inline type="checkbox" id="gridCheck3" onChange={() => {
+          setCompleted((old) => !old);
+          props.setCompletedTask(props.id, !props.completed);
+        }}
+        checked = {completed} ></Form.Check>
         {(props.urgent) ? (<span className="important-text">{props.description}</span>) : props.description}
       </span>
     </>

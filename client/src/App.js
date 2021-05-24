@@ -113,13 +113,27 @@ function App() {
     setTasks(oldTasks => {
       return oldTasks.map((tk) => {
         if (tk.id === task.id)
-          return { id: task.id, description: task.description, date: task.date, urgent: task.urgent, private: task.private };
+          return { id: task.id, description: task.description, date: task.date, urgent: task.urgent, private: task.private, completed: task.completed };
         else
           return tk;
       });
     })
 
     API.editTask(task).then(() => { setDirty(true); });
+  }
+
+  const setCompletedTask = (id, isCompleted) => {
+
+    setTasks(oldTasks => {
+      return oldTasks.map((tk) => {
+        if (tk.id === id)
+          return { id: tk.id, description: tk.description, date: tk.date, urgent: tk.urgent, private: tk.private, completed: isCompleted };
+        else
+          return tk;
+      });
+    })
+
+    API.setCompletedTask(id, isCompleted).then(() => { setDirty(true); });
   }
 
   return (
@@ -130,10 +144,10 @@ function App() {
           <MyAside open={open} setSelectedFilter={setSelectedFilter} setDirty={setDirty} />
           <Switch>
             <Route path="/:filterName" render={({ match }) =>
-              (<MyMainContent tasks={tasks} filter={match.params.filterName} deleteTask={deleteTask} editTask={editTask} />)
+              (<MyMainContent tasks={tasks} filter={match.params.filterName} deleteTask={deleteTask} editTask={editTask} setCompletedTask={setCompletedTask} />)
             } />
             <Route exact path="/" render={() =>
-              <MyMainContent tasks={tasks} filter={"All"} deleteTask={deleteTask} editTask={editTask} />
+              <MyMainContent tasks={tasks} filter={"All"} deleteTask={deleteTask} editTask={editTask} setCompletedTask={setCompletedTask}/>
             } />
           </Switch>
         </Row>

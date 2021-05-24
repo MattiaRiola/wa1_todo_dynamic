@@ -10,6 +10,7 @@ function marshallTask(task) {
         date: dayjs(task.deadline).isValid() ? dayjs(task.deadline) : undefined,
         urgent: task.important !== 0 ? true : false,
         private: task.private !== 0 ? true : false,
+        completed: task.completed !== 0 ? true : false
     }
     return taskClient;
 }
@@ -23,7 +24,7 @@ function unmarshallTask(task) {
         important: task.urgent ? 1 : 0,
         isPrivate: task.private ? 1 : 0,
         deadline: task.date !== undefined ? task.date.format('YYYY-MM-DD HH:mm') : "",
-        completed: 0,
+        completed: task.completed ? 1 : 0,
         user: 1
     }
     return taskServer;
@@ -117,7 +118,23 @@ async function editTask(task) {
 
 }
 
-const API = { addNewTask, marshallTask, unmarshallTask, getFilteredTasks, deleteTask, editTask };
+async function setCompletedTask(id, isCompleted) {
+    return fetch('api/tasks/setCompleted', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({id: id, completed: isCompleted ? 1 : 0})
+    })
+        .then(() => {
+            console.log("task " + id + "set as " + isCompleted);
+        })
+        .catch(function (error) {
+            console.log('Failed to set completed on server the task: ', error);
+        });
+}
+
+const API = { addNewTask, marshallTask, unmarshallTask, getFilteredTasks, deleteTask, editTask, setCompletedTask };
 
 
 export default API;
