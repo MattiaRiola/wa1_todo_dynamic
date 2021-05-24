@@ -47,7 +47,7 @@ function unmarshallTask(task) {
 
 async function getFilteredTasks(filter) {
     try {
-        const response = await fetch('/api/tasks/'+filter);
+        const response = await fetch('/api/tasks/' + filter);
         if (response.ok) {
             const tasks = await response.json();
             return tasks;
@@ -86,7 +86,7 @@ async function deleteTask(id) {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({id: id})
+        body: JSON.stringify({ id: id })
     })
         .then(() => {
             console.log("task " + id + "deleted");
@@ -96,7 +96,28 @@ async function deleteTask(id) {
         });
 };
 
-const API = { addNewTask, marshallTask, unmarshallTask, getFilteredTasks, deleteTask };
+async function editTask(task) {
+    let editTask = unmarshallTask(task);
+    task = {id:task.id, ...editTask};
+    
+    console.log("trying to edit: ",task);
+    return fetch('api/tasks/update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(task)
+    })
+        .then(() => {
+            console.log("task " + task.id + "updated");
+        })
+        .catch(function (error) {
+            console.log('Failed to update data on server: ', error);
+        });
+
+}
+
+const API = { addNewTask, marshallTask, unmarshallTask, getFilteredTasks, deleteTask, editTask };
 
 
 export default API;

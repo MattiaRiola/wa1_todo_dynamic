@@ -106,7 +106,6 @@ function App() {
 
   const deleteTask = (id) => {
     setTasks(oldTasks => oldTasks.filter(task => task.id !== id));
-
     API.deleteTask(id).then(() => { setDirty(true); });
   }
 
@@ -119,6 +118,8 @@ function App() {
           return tk;
       });
     })
+
+    API.editTask(task).then(() => { setDirty(true); });
   }
 
   return (
