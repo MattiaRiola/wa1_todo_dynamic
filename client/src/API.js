@@ -29,9 +29,25 @@ function unmarshallTask(task) {
     return taskServer;
 }
 
-async function getAllTasks() {
+// async function getAllTasks() {
+//     try {
+//         const response = await fetch('/api/tasks/all');
+//         if (response.ok) {
+//             const tasks = await response.json();
+//             return tasks;
+//         }
+//         else {
+//             throw new Error(response.statusText);
+//         }
+//     } catch (err) {
+//         console.log(err);
+//         throw new Error(err);
+//     }
+// }
+
+async function getFilteredTasks(filter) {
     try {
-        const response = await fetch('/api/tasks/all');
+        const response = await fetch('/api/tasks/'+filter);
         if (response.ok) {
             const tasks = await response.json();
             return tasks;
@@ -63,7 +79,7 @@ async function addNewTask(addedTask) {
         });
 };
 
-const API = { getAllTasks, addNewTask, marshallTask, unmarshallTask };
+const API = { addNewTask, marshallTask, unmarshallTask, getFilteredTasks };
 
 
 export default API;

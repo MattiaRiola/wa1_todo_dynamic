@@ -58,9 +58,12 @@ function App() {
   const [dirty, setDirty] = useState(false);
 
 
+  const [selectedFilter, setSelectedFilter] = useState("all");
+
+
   //Rehydrate tasks at mount time
   useEffect(() => {
-    API.getAllTasks().then(newT => {
+    API.getFilteredTasks("all").then(newT => {
       let marshallResult = [];
       newT.forEach(task => {
         marshallResult.push(API.marshallTask(task));
@@ -74,33 +77,38 @@ function App() {
   useEffect(() => {
     if (tasks.length && dirty) {
       //console.log("aggiorno da rehydrate, dirty: ", dirty, " tasks.length: ", tasks.length );
-      API.getAllTasks().then(newT => {
+      API.getFilteredTasks(selectedFilter).then(newT => {
         let marshallResult = [];
         newT.forEach(task => {
           marshallResult.push(API.marshallTask(task));
         });
+        setDirty(false);
         setTasks(marshallResult);
         //setLoading(false);
-        setDirty(false);
+        
+      // API.getAllTasks().then(newT => {
+      //   let marshallResult = [];
+      //   newT.forEach(task => {
+      //     marshallResult.push(API.marshallTask(task));
+      //   });
+      //   setTasks(marshallResult);
+      //   //setLoading(false);
+      //   setDirty(false);
       })
       .catch( err => console.log(err) );
     }
-  }, [tasks.length, dirty]);
+  }, [tasks.length, dirty, selectedFilter]);
 
-  /**
-   * GET request to the server to get ALL tasks
-   * It is called anytime "serverChanges" is updated, which means that it is called anytime there is a modification on the server
-   */
   // useEffect(() => {
-  //   const fetchTasks = async () => {
-  //     API.getAllTasks()
-  //     .then((result) => {
-  //       setTasks(result);
-  //     });
-  //   }
-
-  //   fetchTasks();
-  // }, [dirty]);
+  //       API.getFilteredTasks(selectedFilter).then(newT => {
+  //         let marshallResult = [];
+  //         newT.forEach(task => {
+  //           marshallResult.push(API.marshallTask(task));
+  //         });
+  //         setTasks(marshallResult);
+  //         //setLoading(false);
+  //         setDirty(false);
+  // }, [selectedFilter]);
 
   const addTask = (task) => {
     //UPDATE LOCAL TASKS WITH NEW TASK (removed if something goes wrong in the POST)
@@ -114,8 +122,6 @@ function App() {
     * If addNewTask catch internal a POST error, setting dirty to true guarantee that local state (tasks) is rollbacked
     */
     API.addNewTask(task).then(() => { setDirty(true); });
-
-
   }
 
   const deleteTask = (id) => {
@@ -138,7 +144,7 @@ function App() {
       <MyNavbar setOpen={setOpen} open={open} />
       <Container fluid>
         <Row className="row-height">
-          <MyAside open={open} />
+          <MyAside open={open} setSelectedFilter={setSelectedFilter} setDirty={setDirty} />
           <Switch>
             <Route path="/:filterName" render={({ match }) =>
               (<MyMainContent tasks={tasks} filter={match.params.filterName} deleteTask={deleteTask} editTask={editTask} />)
