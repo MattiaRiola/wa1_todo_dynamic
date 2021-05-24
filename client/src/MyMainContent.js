@@ -38,15 +38,19 @@ function MyMainContent(props) {
   return (
     <>
       <Col className="py-2 px-lg-3 border bg-light" id="menu-filter">
-        <Title filter={props.filter} />
-        <TaskTable tasks={props.tasks} filter={props.filter} deleteTask={props.deleteTask} editTask={props.editTask} setCompletedTask={props.setCompletedTask} />
+        <Title filter={props.filter} loading={props.loading} />
+        {props.loading ? "" :
+          (<TaskTable tasks={props.tasks} filter={props.filter} deleteTask={props.deleteTask} editTask={props.editTask} setCompletedTask={props.setCompletedTask} />)}
+
       </Col>
     </>
   );
 }
 
 function Title(props) {
-  return (<h1>{props.filter}</h1>);
+  return (<h1>{props.filter} {props.loading ? (<div className="spinner-border text-primary" role="status">
+  <span className="sr-only">Loading...</span>
+</div>) : ""}</h1>);
 }
 
 
@@ -74,7 +78,7 @@ function TaskTable(props) {
 function TaskRow(props) {
   return (
     <>
-      <ListGroup.Item as="li" className="transparent-bg">
+      <ListGroup.Item as="li" className="transparent-bg ">
         <Container>
           <Row>
             <Col sm lg="5" >
@@ -137,11 +141,11 @@ function TaskDescription(props) {
   let [completed, setCompleted] = useState(props.completed);
   let [modified, setModified] = useState(false);
   useEffect(() => {
-    if(modified) {
+    if (modified) {
       props.setCompletedTask(props.id, completed);
       setModified(false);
     }
-  },[completed,modified,props]);
+  }, [completed, modified, props]);
 
   return (
     <>
@@ -150,7 +154,7 @@ function TaskDescription(props) {
           setCompleted((old) => !old);
           setModified((old) => !old);
         }}
-        checked = {completed} ></Form.Check>
+          checked={completed} ></Form.Check>
         {(props.urgent) ? (<span className="important-text">{props.description}</span>) : props.description}
       </span>
     </>

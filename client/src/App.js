@@ -56,6 +56,7 @@ function App() {
   //const [serverChanges, setServerChanges] = useState(false);
 
   const [dirty, setDirty] = useState(false);
+  const [loading, setLoading] = useState(true);
 
 
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -69,6 +70,7 @@ function App() {
         marshallResult.push(API.marshallTask(task));
       });
       setTasks(marshallResult);
+      setLoading(false);
     });
 
   }, []);
@@ -84,7 +86,7 @@ function App() {
         });
         setDirty(false);
         setTasks(marshallResult);
-        //setLoading(false);
+        setLoading(false);
       })
       .catch( err => console.log(err) );
     }
@@ -101,11 +103,13 @@ function App() {
     * this effect set state variable 'dirty' that trigger previous useEffect (that call API.getAllTasks)
     * If addNewTask catch internal a POST error, setting dirty to true guarantee that local state (tasks) is rollbacked
     */
+    setLoading(true);
     API.addNewTask(task).then(() => { setDirty(true); });
   }
 
   const deleteTask = (id) => {
     setTasks(oldTasks => oldTasks.filter(task => task.id !== id));
+    setLoading(true);
     API.deleteTask(id).then(() => { setDirty(true); });
   }
 
@@ -118,7 +122,7 @@ function App() {
           return tk;
       });
     })
-
+    setLoading(true);
     API.editTask(task).then(() => { setDirty(true); });
   }
 
@@ -132,7 +136,7 @@ function App() {
           return tk;
       });
     })
-
+    setLoading(true);
     API.setCompletedTask(id, isCompleted).then(() => { setDirty(true); });
   }
 
@@ -141,13 +145,13 @@ function App() {
       <MyNavbar setOpen={setOpen} open={open} />
       <Container fluid>
         <Row className="row-height">
-          <MyAside open={open} setSelectedFilter={setSelectedFilter} setDirty={setDirty} />
+          <MyAside open={open} setSelectedFilter={setSelectedFilter} setDirty={setDirty} setLoading={setLoading} />
           <Switch>
             <Route path="/:filterName" render={({ match }) =>
-              (<MyMainContent tasks={tasks} filter={match.params.filterName} deleteTask={deleteTask} editTask={editTask} setCompletedTask={setCompletedTask} />)
+              (<MyMainContent tasks={tasks} filter={match.params.filterName} deleteTask={deleteTask} editTask={editTask} setCompletedTask={setCompletedTask} loading={loading}/>)
             } />
             <Route exact path="/" render={() =>
-              <MyMainContent tasks={tasks} filter={"All"} deleteTask={deleteTask} editTask={editTask} setCompletedTask={setCompletedTask}/>
+              <MyMainContent tasks={tasks} filter={"All"} deleteTask={deleteTask} editTask={editTask} setCompletedTask={setCompletedTask} loading={loading}/>
             } />
           </Switch>
         </Row>
