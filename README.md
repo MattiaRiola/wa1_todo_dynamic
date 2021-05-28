@@ -32,6 +32,7 @@ Finally, remember to add the `final` tag for the final submission, otherwise it 
 GET http://localhost:3001/api/tasks/all
 GET http://localhost:3001/api/tasks/important
 GET http://localhost:3001/api/tasks/private
+GET http://localhost:3001/api/tasks/today
 GET http://localhost:3001/api/tasks/completed
 GET http://localhost:3001/api/tasks/uncompleted
 GET http://localhost:3001/api/tasks/next7days

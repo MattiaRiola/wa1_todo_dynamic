@@ -69,6 +69,19 @@ app.get('/api/tasks/:filter', (req, res) => {
                 return;
             }
             break;
+        case "today":
+            let today = dayjs();
+            let from = today.format("YYYY-MM-DD").toString() + " 00:00";
+            let to = today.format("YYYY-MM-DD").toString() + " 23:59";
+            dao.getTasksByDeadlineRange(from,to)
+                .then((tasks) => {
+                    if (Object.entries(tasks).length === 0)
+                        res.status(404).json("No today tasks");
+                    else
+                        res.json(tasks);
+                })
+                .catch((error) => { res.status(500).json(error); });
+            break;
         case "important":
             dao.getImportantTasks()
                 .then((tasks) => {
