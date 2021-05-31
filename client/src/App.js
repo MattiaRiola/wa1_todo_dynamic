@@ -167,7 +167,7 @@ function App() {
 
   return (
     <Router>
-      <MyNavbar setOpen={setOpen} open={open} message={message} />
+      <MyNavbar setOpen={setOpen} open={open} message={message} logout={doLogOut} loggedIn={loggedIn}/>
       <Container fluid>
         <Row className="row-height">
           <>

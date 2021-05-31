@@ -10,10 +10,10 @@ const db = new sqlite.Database('tasks.db', (err) => {
 });
 
 // get all tasks
-exports.listTasks = () => {
+exports.listTasks = (userId) => {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM tasks';
-        db.all(sql, [], (err, rows) => {
+        const sql = 'SELECT * FROM tasks WHERE user = ? ';
+        db.all(sql, [userId], (err, rows) => {
             if (err) {
                 reject(err);
                 return;
@@ -25,10 +25,10 @@ exports.listTasks = () => {
 };
 
 // get tasks with a given deadline
-exports.getTasksByDeadline = (deadline) => {
+exports.getTasksByDeadline = (deadline, userId) => {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM tasks WHERE deadline=?';
-        db.all(sql, [deadline], (err, rows) => {
+        const sql = 'SELECT * FROM tasks WHERE deadline=? AND user = ?';
+        db.all(sql, [deadline, userId], (err, rows) => {
             if (err) {
                 reject(err);
                 return;
@@ -40,10 +40,10 @@ exports.getTasksByDeadline = (deadline) => {
 };
 
 // get tasks with a given deadline range
-exports.getTasksByDeadlineRange = (left,right) => {
+exports.getTasksByDeadlineRange = (left,right, userId) => {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM tasks WHERE deadline>=? AND deadline<?';
-        db.all(sql, [left,right], (err, rows) => {
+        const sql = 'SELECT * FROM tasks WHERE deadline>=? AND deadline<? AND user = ?';
+        db.all(sql, [left,right, userId], (err, rows) => {
             if (err) {
                 reject(err);
                 return;
@@ -55,10 +55,10 @@ exports.getTasksByDeadlineRange = (left,right) => {
 };
 
 // get tasks with filter "IMPORTANT"
-exports.getImportantTasks = () => {
+exports.getImportantTasks = (userId) => {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM tasks WHERE important = 1';
-        db.all(sql, [], (err, rows) => {
+        const sql = 'SELECT * FROM tasks WHERE important = 1 AND user = ?';
+        db.all(sql, [userId], (err, rows) => {
             if (err) {
                 reject(err);
                 return;
@@ -70,10 +70,10 @@ exports.getImportantTasks = () => {
 }
 
 // get tasks with filter "PRIVATE"
-exports.getPrivateTasks = () => {
+exports.getPrivateTasks = (userId) => {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM tasks WHERE private = 1';
-        db.all(sql, [], (err, rows) => {
+        const sql = 'SELECT * FROM tasks WHERE private = 1 AND user = ?';
+        db.all(sql, [userId], (err, rows) => {
             if (err) {
                 reject(err);
                 return;
@@ -85,10 +85,10 @@ exports.getPrivateTasks = () => {
 }
 
 // get tasks with filter "COMPLETE"
-exports.getCompletedTasks = () => {
+exports.getCompletedTasks = (userId) => {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM tasks WHERE completed = 1';
-        db.all(sql, [], (err, rows) => {
+        const sql = 'SELECT * FROM tasks WHERE completed = 1 AND user = ?';
+        db.all(sql, [userId], (err, rows) => {
             if (err) {
                 reject(err);
                 return;
@@ -100,10 +100,10 @@ exports.getCompletedTasks = () => {
 }
 
 // get tasks with filter "UNCOMPLETE"
-exports.getUncompletedTasks = () => {
+exports.getUncompletedTasks = (userId) => {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM tasks WHERE completed = 0';
-        db.all(sql, [], (err, rows) => {
+        const sql = 'SELECT * FROM tasks WHERE completed = 0 AND user = ?';
+        db.all(sql, [userId], (err, rows) => {
             if (err) {
                 reject(err);
                 return;
@@ -115,12 +115,12 @@ exports.getUncompletedTasks = () => {
 }
 
 // get tasks with filter "NEXT7DAYS"
-exports.getNext7DaysTasks = () => {
+exports.getNext7DaysTasks = (userId) => {
     return new Promise((resolve, reject) => {
         const now = dayjs().format('YYYY-MM-DD HH:mm').toString();
         const dayslater = dayjs().add(7, 'day').format('YYYY-MM-DD HH:mm').toString();
-        const sql = 'SELECT * FROM tasks WHERE deadline < date(?) AND deadline > date(?)';
-        db.all(sql, [dayslater, now], (err, rows) => {
+        const sql = 'SELECT * FROM tasks WHERE deadline < date(?) AND deadline > date(?) AND user = ?';
+        db.all(sql, [dayslater, now, userId], (err, rows) => {
             if (err) {
                 reject(err);
                 return;
@@ -132,10 +132,10 @@ exports.getNext7DaysTasks = () => {
 }
 
 // retrieve a task, given its “id”; 
-exports.getTaskById = (id) => {
+exports.getTaskById = (id, userId) => {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM tasks WHERE id = ?';
-        db.all(sql, [id], (err, rows) => {
+        const sql = 'SELECT * FROM tasks WHERE id = ? AND user = ?';
+        db.all(sql, [id, userId], (err, rows) => {
             if (err) {
                 reject(err);
                 return;
@@ -178,8 +178,8 @@ exports.addTask = (id, task) => {
 // will overwrite the current properties of the existing task. The “id” will not change after the update)
 exports.updateTask = (id, task) => {
             return new Promise((resolve, reject) => {
-                const sql = 'UPDATE tasks SET description=?, important=?, private=?, deadline=?, completed=?, user=? WHERE id = ?';
-                db.all(sql, [task.description, task.important, task.isPrivate, task.deadline, task.completed, task.user, id], (err, rows) => {
+                const sql = 'UPDATE tasks SET description=?, important=?, private=?, deadline=?, completed=? WHERE id = ? AND user = ?';
+                db.all(sql, [task.description, task.important, task.isPrivate, task.deadline, task.completed, id, task.user], (err, rows) => {
                     if (err) {
                         reject(err);
                         return;
@@ -192,10 +192,10 @@ exports.updateTask = (id, task) => {
         }
 
 // mark an existing task as completed/uncompleted;
-exports.setCompletedFieldInTask = (id, isCompleted) => {
+exports.setCompletedFieldInTask = (id, isCompleted, userId) => {
     return new Promise((resolve, reject) => {
-        const sql = 'UPDATE tasks SET completed=? WHERE id = ?';
-        db.all(sql, [isCompleted, id], (err, rows) => {
+        const sql = 'UPDATE tasks SET completed=? WHERE id = ? AND user = ?';
+        db.all(sql, [isCompleted, id, userId], (err, rows) => {
             if (err) {
                 reject(err);
                 return;
@@ -207,10 +207,10 @@ exports.setCompletedFieldInTask = (id, isCompleted) => {
 }
 
 // delete an existing task, given its “id”.
-exports.deleteTask = (id) => {
+exports.deleteTask = (id, userId) => {
     return new Promise((resolve, reject) => {
-        const sql = 'DELETE FROM tasks WHERE id = ?';
-        db.all(sql, [id], (err, rows) => {
+        const sql = 'DELETE FROM tasks WHERE id = ? AND user = ?';
+        db.all(sql, [id, userId], (err, rows) => {
             if (err) {
                 reject(err);
                 return;

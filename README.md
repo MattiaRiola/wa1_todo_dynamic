@@ -20,6 +20,13 @@ When another member of the team pulls the updated project from the repository, r
 
 Finally, remember to add the `final` tag for the final submission, otherwise it will not be graded.
 
+## List of users in the database
+
+| id | email                | name      | password      |
+| -- | -------------------- | --------- | ------------- |
+| 2  | prova@gmail.com      | MarMatGab | strong123     |
+| 3  | altraprova@gmail.com | GabMatMar | stronghissima |
+
 ## List of APIs offered by the server
 
 ### Check if the user is logged
