@@ -9,7 +9,7 @@ dayjs.extend(customParseFormat);
 
 const PORT = 3001;
 
-const dao = require('./dao');
+const task_dao = require('./task-dao');
 
 const app = express();
 
@@ -31,7 +31,7 @@ app.get('/api/tasks/:filter', (req, res) => {
     const id = req.query.id;
     switch (filter) {
         case "all":
-            dao.listTasks()
+            task_dao.listTasks()
                 //json(tasks) encodes the object "tasks" (which is the result of a query) into the JSON format
                 .then((tasks) => { res.json(tasks); })
                 .catch((error) => { res.status(500).json(error); });
@@ -45,7 +45,7 @@ app.get('/api/tasks/:filter', (req, res) => {
                 "YYYY-MM-DD HH:m",
                 "YYYY-MM-DD H:mm"
             ], true).isValid()) {
-                dao.getTasksByDeadline(deadline)
+                task_dao.getTasksByDeadline(deadline)
                     .then((tasks) => {
                         if (Object.entries(tasks).length === 0)
                             res.status(404).json("No tasks with deadline " + deadline);
@@ -56,7 +56,7 @@ app.get('/api/tasks/:filter', (req, res) => {
             } else if (dayjs(deadline, 'YYYY-MM-DD', true).isValid()) {
                 let from = deadline + " 00:00";
                 let to = deadline + " 23:59";
-                dao.getTasksByDeadlineRange(from, to)
+                task_dao.getTasksByDeadlineRange(from, to)
                     .then((tasks) => {
                         if (Object.entries(tasks).length === 0)
                             res.status(404).json("No tasks with deadline " + deadline);
@@ -73,7 +73,7 @@ app.get('/api/tasks/:filter', (req, res) => {
             let today = dayjs();
             let from = today.format("YYYY-MM-DD").toString() + " 00:00";
             let to = today.format("YYYY-MM-DD").toString() + " 23:59";
-            dao.getTasksByDeadlineRange(from,to)
+            task_dao.getTasksByDeadlineRange(from,to)
                 .then((tasks) => {
                     if (Object.entries(tasks).length === 0)
                         res.status(404).json("No today tasks");
@@ -83,7 +83,7 @@ app.get('/api/tasks/:filter', (req, res) => {
                 .catch((error) => { res.status(500).json(error); });
             break;
         case "important":
-            dao.getImportantTasks()
+            task_dao.getImportantTasks()
                 .then((tasks) => {
                     if (Object.entries(tasks).length === 0)
                         res.status(404).json("No important tasks");
@@ -93,7 +93,7 @@ app.get('/api/tasks/:filter', (req, res) => {
                 .catch((error) => { res.status(500).json(error); });
             break;
         case "private":
-            dao.getPrivateTasks()
+            task_dao.getPrivateTasks()
                 .then((tasks) => {
                     if (Object.entries(tasks).length === 0)
                         res.status(404).json("No private tasks");
@@ -103,7 +103,7 @@ app.get('/api/tasks/:filter', (req, res) => {
                 .catch((error) => { res.status(500).json(error); });
             break;
         case "completed":
-            dao.getCompletedTasks()
+            task_dao.getCompletedTasks()
                 .then((tasks) => {
                     if (Object.entries(tasks).length === 0)
                         res.status(404).json("No completed tasks");
@@ -113,7 +113,7 @@ app.get('/api/tasks/:filter', (req, res) => {
                 .catch((error) => { res.status(500).json(error); });
             break;
         case "uncompleted":
-            dao.getUncompletedTasks()
+            task_dao.getUncompletedTasks()
                 .then((tasks) => {
                     if (Object.entries(tasks).length === 0)
                         res.status(404).json("No uncompleted tasks");
@@ -123,7 +123,7 @@ app.get('/api/tasks/:filter', (req, res) => {
                 .catch((error) => { res.status(500).json(error); });
             break;
         case "next7days":
-            dao.getNext7DaysTasks()
+            task_dao.getNext7DaysTasks()
                 .then((tasks) => {
                     if (Object.entries(tasks).length === 0)
                         res.status(404).json("No tasks in 7days");
@@ -134,7 +134,7 @@ app.get('/api/tasks/:filter', (req, res) => {
             break;
         case "search":
             if (!isNaN(id)) {
-                dao.getTaskById(id)
+                task_dao.getTaskById(id)
                     .then((tasks) => {
                         if (Object.entries(tasks).length === 0)
                             res.status(404).json("No tasks with id " + id);
@@ -200,9 +200,9 @@ app.post('/api/tasks/new',
         };
 
         try {
-            let id = await dao.getLastId();
+            let id = await task_dao.getLastId();
             //console.log("Last id is: " + id);
-            await dao.addTask(id + 1, task);
+            await task_dao.addTask(id + 1, task);
             res.end();
         } catch (error) {
             res.status(500).json(error);
@@ -259,7 +259,7 @@ app.post('/api/tasks/update',
             user: user
         };
 
-        dao.getTaskById(id)
+        task_dao.getTaskById(id)
             .then((tasks) => {
                 if (Object.entries(tasks).length === 0)
                     res.status(404).json("No tasks with id " + id);
@@ -267,7 +267,7 @@ app.post('/api/tasks/update',
             .catch((error) => { res.status(500).json(error); });
 
         try {
-            await dao.updateTask(id, task);
+            await task_dao.updateTask(id, task);
             res.end();
         } catch (error) {
             res.status(500).json(error);
@@ -297,7 +297,7 @@ app.post('/api/tasks/setcompleted', body('id').isNumeric(), body('completed').is
 
 
     try {
-        await dao.setCompletedFieldInTask(id, completed);
+        await task_dao.setCompletedFieldInTask(id, completed);
         res.end();
     } catch (error) {
         res.status(500).json(error);
@@ -313,7 +313,7 @@ app.post('/api/tasks/delete', body('id').isNumeric(), async (req, res) => {
     let id = req.body.id;
 
     try {
-        await dao.deleteTask(id);
+        await task_dao.deleteTask(id);
         res.end();
     } catch (error) {
         res.status(500).json(error);
