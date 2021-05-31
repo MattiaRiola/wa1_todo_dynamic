@@ -2,6 +2,8 @@
 
 const express = require('express');
 const morgan = require('morgan');
+const session = require('express-session'); // session middleware
+
 const dayjs = require('dayjs');
 var customParseFormat = require('dayjs/plugin/customParseFormat');
 dayjs.extend(customParseFormat);
@@ -9,12 +11,69 @@ dayjs.extend(customParseFormat);
 
 const PORT = 3001;
 
+const passport = require('passport');
+const passportLocal = require('passport-local');
+
 const task_dao = require('./task-dao');
+const user_dao = require('./user-dao');
+
+
+// initialize and configure passport
+passport.use(new passportLocal.Strategy((username, password, done) => {
+    // verification callback for authentication
+    user_dao.getUser(username, password).then(user => {
+        if (user)
+            done(null, user);
+        else
+            done(null, false, { message: 'Username or password wrong' });
+    }).catch(err => {
+        done(err);
+    });
+}));
+
+// serialize and de-serialize the user (user object <-> session)
+// we serialize the user id and we store it in the session: the session is very small in this way
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
+// starting from the data in the session, we extract the current (logged-in) user
+passport.deserializeUser((id, done) => {
+    user_dao.getUserById(id)
+        .then(user => {
+            done(null, user); // this will be available in req.user
+        }).catch(err => {
+            done(err, null);
+        });
+});
+
 
 const app = express();
 
 app.use(morgan('dev')); //to see server side some logs
 app.use(express.json()); //to parse the tasks from string to json
+
+
+// custom middleware: check if a given request is coming from an authenticated user
+// simple way could be check req.isAuthenticated() at the beginning of every callback body in each route to protect
+const isLoggedIn = (req, res, next) => {
+    if (req.isAuthenticated())
+    // SE SONO AUTENTICATO POSSO PROCEDERE A CHIAMARE LA FUNZIONE CHE SEGUE, CHE SARA' IL CORPO DELLE RICHIESTE GET/POST
+      return next();  
+    // altrimenti ritorno l'errore e non proseguo al prossimo middleware
+    return res.status(401).json({ error: 'not authenticated' });
+}
+
+// initialize and configure HTTP sessions
+app.use(session({
+    secret: 'The secret of aShortName. We really do love Corno please 30L us',
+    resave: false,
+    saveUninitialized: false
+  }));
+  
+// tell passport to use session cookies
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 //to install for validating (npm install --save express-validator)
@@ -25,7 +84,9 @@ app.get('/', (req, res) => {
     res.send('Hello World, from your server');
 });
 
-app.get('/api/tasks/:filter', (req, res) => {
+app.get('/api/tasks/:filter', 
+        // isLoggedIn,  //to deny access by not logged users to filters api
+         (req, res) => {
     const filter = req.params.filter;
     const deadline = req.query.time;
     const id = req.query.id;
@@ -73,7 +134,7 @@ app.get('/api/tasks/:filter', (req, res) => {
             let today = dayjs();
             let from = today.format("YYYY-MM-DD").toString() + " 00:00";
             let to = today.format("YYYY-MM-DD").toString() + " 23:59";
-            task_dao.getTasksByDeadlineRange(from,to)
+            task_dao.getTasksByDeadlineRange(from, to)
                 .then((tasks) => {
                     if (Object.entries(tasks).length === 0)
                         res.status(404).json("No today tasks");
