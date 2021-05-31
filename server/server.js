@@ -38,6 +38,8 @@ passport.serializeUser((user, done) => {
 });
 
 // starting from the data in the session, we extract the current (logged-in) user
+// This is so powerful because now we can access data stored in the db for the current user, simply writing req.user
+// I have to write another api to make frontend able to user the same information: this api is app.get('/api/sessions/current'
 passport.deserializeUser((id, done) => {
     user_dao.getUserById(id)
         .then(user => {
@@ -58,8 +60,8 @@ app.use(express.json()); //to parse the tasks from string to json
 // simple way could be check req.isAuthenticated() at the beginning of every callback body in each route to protect
 const isLoggedIn = (req, res, next) => {
     if (req.isAuthenticated())
-    // SE SONO AUTENTICATO POSSO PROCEDERE A CHIAMARE LA FUNZIONE CHE SEGUE, CHE SARA' IL CORPO DELLE RICHIESTE GET/POST
-      return next();  
+        // SE SONO AUTENTICATO POSSO PROCEDERE A CHIAMARE LA FUNZIONE CHE SEGUE, CHE SARA' IL CORPO DELLE RICHIESTE GET/POST
+        return next();
     // altrimenti ritorno l'errore e non proseguo al prossimo middleware
     return res.status(401).json({ error: 'not authenticated' });
 }
@@ -69,8 +71,8 @@ app.use(session({
     secret: 'The secret of aShortName. We really do love Corno please 30L us',
     resave: false,
     saveUninitialized: false
-  }));
-  
+}));
+
 // tell passport to use session cookies
 app.use(passport.initialize());
 app.use(passport.session());
@@ -84,134 +86,135 @@ app.get('/', (req, res) => {
     res.send('Hello World, from your server');
 });
 
-app.get('/api/tasks/:filter', 
-        // isLoggedIn,  //to deny access by not logged users to filters api
-         (req, res) => {
-    const filter = req.params.filter;
-    const deadline = req.query.time;
-    const id = req.query.id;
-    switch (filter) {
-        case "all":
-            task_dao.listTasks()
-                //json(tasks) encodes the object "tasks" (which is the result of a query) into the JSON format
-                .then((tasks) => { res.json(tasks); })
-                .catch((error) => { res.status(500).json(error); });
-            break;
-        case "deadline":
-            console.log("this is the date you are asking for: " + deadline);
-
-            if (dayjs(deadline, [
-                "YYYY-MM-DD HH:mm",
-                "YYYY-MM-DD H:m",
-                "YYYY-MM-DD HH:m",
-                "YYYY-MM-DD H:mm"
-            ], true).isValid()) {
-                task_dao.getTasksByDeadline(deadline)
-                    .then((tasks) => {
-                        if (Object.entries(tasks).length === 0)
-                            res.status(404).json("No tasks with deadline " + deadline);
-                        else
-                            res.json(tasks);
-                    })
+app.get('/api/tasks/:filter',
+    isLoggedIn,  //to deny access by not logged users to filters api
+    (req, res) => {
+        const filter = req.params.filter;
+        const deadline = req.query.time;
+        const id = req.query.id;
+        switch (filter) {
+            case "all":
+                task_dao.listTasks()
+                    //json(tasks) encodes the object "tasks" (which is the result of a query) into the JSON format
+                    .then((tasks) => { res.json(tasks); })
                     .catch((error) => { res.status(500).json(error); });
-            } else if (dayjs(deadline, 'YYYY-MM-DD', true).isValid()) {
-                let from = deadline + " 00:00";
-                let to = deadline + " 23:59";
+                break;
+            case "deadline":
+                console.log("this is the date you are asking for: " + deadline);
+
+                if (dayjs(deadline, [
+                    "YYYY-MM-DD HH:mm",
+                    "YYYY-MM-DD H:m",
+                    "YYYY-MM-DD HH:m",
+                    "YYYY-MM-DD H:mm"
+                ], true).isValid()) {
+                    task_dao.getTasksByDeadline(deadline)
+                        .then((tasks) => {
+                            if (Object.entries(tasks).length === 0)
+                                res.status(404).json("No tasks with deadline " + deadline);
+                            else
+                                res.json(tasks);
+                        })
+                        .catch((error) => { res.status(500).json(error); });
+                } else if (dayjs(deadline, 'YYYY-MM-DD', true).isValid()) {
+                    let from = deadline + " 00:00";
+                    let to = deadline + " 23:59";
+                    task_dao.getTasksByDeadlineRange(from, to)
+                        .then((tasks) => {
+                            if (Object.entries(tasks).length === 0)
+                                res.status(404).json("No tasks with deadline " + deadline);
+                            else
+                                res.json(tasks);
+                        })
+                        .catch((error) => { res.status(500).json(error); });
+                } else {
+                    res.status(500).json("Invalid deadline");
+                    return;
+                }
+                break;
+            case "today":
+                let today = dayjs();
+                let from = today.format("YYYY-MM-DD").toString() + " 00:00";
+                let to = today.format("YYYY-MM-DD").toString() + " 23:59";
                 task_dao.getTasksByDeadlineRange(from, to)
                     .then((tasks) => {
                         if (Object.entries(tasks).length === 0)
-                            res.status(404).json("No tasks with deadline " + deadline);
+                            res.status(404).json("No today tasks");
                         else
                             res.json(tasks);
                     })
                     .catch((error) => { res.status(500).json(error); });
-            } else {
-                res.status(500).json("Invalid deadline");
-                return;
-            }
-            break;
-        case "today":
-            let today = dayjs();
-            let from = today.format("YYYY-MM-DD").toString() + " 00:00";
-            let to = today.format("YYYY-MM-DD").toString() + " 23:59";
-            task_dao.getTasksByDeadlineRange(from, to)
-                .then((tasks) => {
-                    if (Object.entries(tasks).length === 0)
-                        res.status(404).json("No today tasks");
-                    else
-                        res.json(tasks);
-                })
-                .catch((error) => { res.status(500).json(error); });
-            break;
-        case "important":
-            task_dao.getImportantTasks()
-                .then((tasks) => {
-                    if (Object.entries(tasks).length === 0)
-                        res.status(404).json("No important tasks");
-                    else
-                        res.json(tasks);
-                })
-                .catch((error) => { res.status(500).json(error); });
-            break;
-        case "private":
-            task_dao.getPrivateTasks()
-                .then((tasks) => {
-                    if (Object.entries(tasks).length === 0)
-                        res.status(404).json("No private tasks");
-                    else
-                        res.json(tasks);
-                })
-                .catch((error) => { res.status(500).json(error); });
-            break;
-        case "completed":
-            task_dao.getCompletedTasks()
-                .then((tasks) => {
-                    if (Object.entries(tasks).length === 0)
-                        res.status(404).json("No completed tasks");
-                    else
-                        res.json(tasks);
-                })
-                .catch((error) => { res.status(500).json(error); });
-            break;
-        case "uncompleted":
-            task_dao.getUncompletedTasks()
-                .then((tasks) => {
-                    if (Object.entries(tasks).length === 0)
-                        res.status(404).json("No uncompleted tasks");
-                    else
-                        res.json(tasks);
-                })
-                .catch((error) => { res.status(500).json(error); });
-            break;
-        case "next7days":
-            task_dao.getNext7DaysTasks()
-                .then((tasks) => {
-                    if (Object.entries(tasks).length === 0)
-                        res.status(404).json("No tasks in 7days");
-                    else
-                        res.json(tasks);
-                })
-                .catch((error) => { res.status(500).json(error); });
-            break;
-        case "search":
-            if (!isNaN(id)) {
-                task_dao.getTaskById(id)
+                break;
+            case "important":
+                task_dao.getImportantTasks()
                     .then((tasks) => {
                         if (Object.entries(tasks).length === 0)
-                            res.status(404).json("No tasks with id " + id);
+                            res.status(404).json("No important tasks");
                         else
                             res.json(tasks);
                     })
                     .catch((error) => { res.status(500).json(error); });
-            } else {
-                res.status(500).json("Invalid ID");
-            }
-            break;
-    }
-});
+                break;
+            case "private":
+                task_dao.getPrivateTasks()
+                    .then((tasks) => {
+                        if (Object.entries(tasks).length === 0)
+                            res.status(404).json("No private tasks");
+                        else
+                            res.json(tasks);
+                    })
+                    .catch((error) => { res.status(500).json(error); });
+                break;
+            case "completed":
+                task_dao.getCompletedTasks()
+                    .then((tasks) => {
+                        if (Object.entries(tasks).length === 0)
+                            res.status(404).json("No completed tasks");
+                        else
+                            res.json(tasks);
+                    })
+                    .catch((error) => { res.status(500).json(error); });
+                break;
+            case "uncompleted":
+                task_dao.getUncompletedTasks()
+                    .then((tasks) => {
+                        if (Object.entries(tasks).length === 0)
+                            res.status(404).json("No uncompleted tasks");
+                        else
+                            res.json(tasks);
+                    })
+                    .catch((error) => { res.status(500).json(error); });
+                break;
+            case "next7days":
+                task_dao.getNext7DaysTasks()
+                    .then((tasks) => {
+                        if (Object.entries(tasks).length === 0)
+                            res.status(404).json("No tasks in 7days");
+                        else
+                            res.json(tasks);
+                    })
+                    .catch((error) => { res.status(500).json(error); });
+                break;
+            case "search":
+                if (!isNaN(id)) {
+                    task_dao.getTaskById(id)
+                        .then((tasks) => {
+                            if (Object.entries(tasks).length === 0)
+                                res.status(404).json("No tasks with id " + id);
+                            else
+                                res.json(tasks);
+                        })
+                        .catch((error) => { res.status(500).json(error); });
+                } else {
+                    res.status(500).json("Invalid ID");
+                }
+                break;
+        }
+    });
 
 
 app.post('/api/tasks/new',
+    isLoggedIn,
     body('important').isBoolean(),
     body('isPrivate').isBoolean(),
     //body('deadline').isDate(),      checked manually inside the function
@@ -271,6 +274,7 @@ app.post('/api/tasks/new',
     });
 
 app.post('/api/tasks/update',
+    isLoggedIn,
     body('id').isNumeric(),
     body('important').isBoolean(),
     body('isPrivate').isBoolean(),
@@ -335,7 +339,7 @@ app.post('/api/tasks/update',
         }
     });
 
-app.post('/api/tasks/setcompleted', body('id').isNumeric(), body('completed').isBoolean(), async (req, res) => {
+app.post('/api/tasks/setcompleted', isLoggedIn, body('id').isNumeric(), body('completed').isBoolean(), async (req, res) => {
 
     // Finds the validation errors in this request and wraps them in an object with handy functions
     const errors = validationResult(req);
@@ -365,7 +369,7 @@ app.post('/api/tasks/setcompleted', body('id').isNumeric(), body('completed').is
     }
 });
 
-app.post('/api/tasks/delete', body('id').isNumeric(), async (req, res) => {
+app.post('/api/tasks/delete', isLoggedIn, body('id').isNumeric(), async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -380,7 +384,58 @@ app.post('/api/tasks/delete', body('id').isNumeric(), async (req, res) => {
         res.status(500).json(error);
     }
 });
+/*****************************************************************************************/
+/**
+ * USER'S API
+ */
 
+// POST /sessions 
+// login
+app.post('/api/sessions', function (req, res, next) {
+    passport.authenticate('local', (err, user, info) => {
+        if (err)
+            return next(err);
+        if (!user) {
+            // display wrong login messages
+            return res.status(401).json(info);
+        }
+        // success, perform the login
+        req.login(user, (err) => {
+            if (err)
+                return next(err);
+
+            // req.user contains the authenticated user, we send all the user info back
+            // this is coming from userDao.getUser()
+            return res.json(req.user);
+        });
+    })(req, res, next);
+});
+
+// ALTERNATIVE: if we are not interested in sending error messages...
+/*
+app.post('/api/sessions', passport.authenticate('local'), (req,res) => {
+  // If this function gets called, authentication was successful.
+  // `req.user` contains the authenticated user.
+  res.json(req.user);
+});
+*/
+
+// DELETE /sessions/current 
+// logout
+app.delete('/api/sessions/current', isLoggedIn, (req, res) => {
+    req.logout();
+    res.end();
+});
+
+// GET /sessions/current
+// check whether the user is logged in or not
+app.get('/api/sessions/current', (req, res) => {
+    if (req.isAuthenticated()) {
+        res.status(200).json(req.user);
+    }
+    else
+        res.status(401).json({ error: 'Unauthenticated user!' });
+});
 
 
 

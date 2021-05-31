@@ -22,6 +22,38 @@ Finally, remember to add the `final` tag for the final submission, otherwise it 
 
 ## List of APIs offered by the server
 
+### Check if the user is logged
+
+* **GET** _/api/sessions/current
+* This API check whether the user is logger in or not
+* **Sample request**:
+``` 
+GET http://localhost:3001/api/sessions/current
+```
+
+* **POST** _/api/sessions
+* login API
+* **Sample request**:
+``` 
+POST http://localhost:3001/api/sessions/current
+{username: "user@mail.com", password: "strongPassword"}
+```
+* **Sample response**:
+```
+200 OK
+```
+* **Error response**:
+```
+401 Unauthenticated user!
+```
+
+* **DELETE** _/api/session/current
+* API for logout 
+``` 
+DELETE http://localhost:3001/api/sessions/current
+```
+
+
 ### Get filtered tasks
 
 * **GET** _/api/tasks/:filter/_
