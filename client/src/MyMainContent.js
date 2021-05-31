@@ -12,35 +12,13 @@ import MyModal from './MyModal.js';
 let isToday = require('dayjs/plugin/isToday')
 dayjs.extend(isToday)
 
-/**
- * Setting up filters
- */
-const myMap = new Map();
-myMap.set("All", (task) => true);
-myMap.set("Important", (task) => task.urgent);
-myMap.set("Today", (task) => {
-  if (task.date !== undefined)
-    return (dayjs(task.date).isToday());
-  else
-    return false;
-}
-);
-myMap.set("Next 7 Days", (task) => {
-  if (task.date !== undefined)
-    return (dayjs(task.date).diff(dayjs(), 'day', true) <= 7 && dayjs(task.date).diff(dayjs(), 'day') >= 0 && !dayjs(task.date).isToday())
-  else
-    return false;
-}
-);
-myMap.set("Private", (task) => task.private);
-
 function MyMainContent(props) {
   return (
     <>
       <Col className="py-2 px-lg-3 border bg-light" id="menu-filter">
         <Title filter={props.filter} loading={props.loading} />
         {props.loading ? "" :
-          (<TaskTable tasks={props.tasks} filter={props.filter} deleteTask={props.deleteTask} editTask={props.editTask} setCompletedTask={props.setCompletedTask} />)}
+          (<TaskTable tasks={props.tasks} deleteTask={props.deleteTask} editTask={props.editTask} setCompletedTask={props.setCompletedTask} />)}
 
       </Col>
     </>
@@ -58,7 +36,7 @@ function TaskTable(props) {
   return (
     <>
       <ListGroup as="ul" variant="flush">
-        {props.tasks.filter(myMap.get(props.filter)).map(task => <TaskRow
+        {props.tasks.map(task => <TaskRow
           key={task.id}
           id={task.id}
           description={task.description}

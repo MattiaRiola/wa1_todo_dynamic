@@ -4,10 +4,11 @@ import MyNavbar from './MyNavbar.js';
 import MyAside from './MyAside.js';
 import MyMainContent from './MyMainContent.js';
 import MyModal from './MyModal.js';
+import { LoginForm, LogoutButton } from './LoginComponents';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
 import API from './API.js';
 
 // const fakeTasks = [
@@ -61,23 +62,32 @@ function App() {
 
   const [selectedFilter, setSelectedFilter] = useState("all");
 
+  /*** Logged in */
+  const [loggedIn, setLoggedIn] = useState(false); // at the beginning, no user is logged in
+  const [message, setMessage] = useState('');
 
   //Rehydrate tasks at mount time
   useEffect(() => {
-    API.getFilteredTasks("all").then(newT => {
-      let marshallResult = [];
-      newT.forEach(task => {
-        marshallResult.push(API.marshallTask(task));
+    if (loggedIn) {
+      API.getFilteredTasks("all").then(newT => {
+        let marshallResult = [];
+        newT.forEach(task => {
+          marshallResult.push(API.marshallTask(task));
+        });
+        setTasks(marshallResult);
+        setLoading(false);
+      }).catch(err => {
+        console.log(err);
+        setTasks([]);
+        setLoading(false);
       });
-      setTasks(marshallResult);
-      setLoading(false);
-    });
+    }
 
-  }, []);
+  }, [loggedIn]);
 
   // Rehydrate tasks at mount time, and when tasks are updated
   useEffect(() => {
-    if (tasks.length && dirty) {
+    if (dirty && loggedIn) {
       //console.log("aggiorno da rehydrate, dirty: ", dirty, " tasks.length: ", tasks.length );
       API.getFilteredTasks(selectedFilter).then(newT => {
         let marshallResult = [];
@@ -88,9 +98,16 @@ function App() {
         setTasks(marshallResult);
         setLoading(false);
       })
-      .catch( err => console.log(err) );
+        .catch(err => {
+          console.log(err);
+          //this must be the right order in this way I wont send more than 1 request to the server
+          // setting Dirty the if will be false
+          setDirty(false);
+          setTasks([]);
+          setLoading(false);
+        });
     }
-  }, [tasks.length, dirty, selectedFilter]);
+  }, [tasks.length, dirty, selectedFilter, loggedIn]);
 
   const addTask = (task) => {
     //UPDATE LOCAL TASKS WITH NEW TASK (removed if something goes wrong in the POST)
@@ -140,23 +157,59 @@ function App() {
     API.setCompletedTask(id, isCompleted).then(() => { setDirty(true); });
   }
 
+  const doLogIn = async (credentials) => {
+    try {
+      const user = await API.logIn(credentials);
+      setLoggedIn(true);
+      setMessage({ msg: `Welcome, ${user}!`, type: 'success' });
+    } catch (err) {
+      setMessage({ msg: err, type: 'danger' });
+      throw "Incorrect username and/or password";
+    }
+  }
+
+  const doLogOut = async () => {
+    await API.logOut();
+    setLoggedIn(false);
+    // clean up everything
+    setTasks([]);
+    setLastId(0);
+  }
+
   return (
     <Router>
-      <MyNavbar setOpen={setOpen} open={open} />
+      <MyNavbar setOpen={setOpen} open={open} message={message} logout={doLogOut} loggedIn={loggedIn} />
       <Container fluid>
         <Row className="row-height">
-          <MyAside open={open} setSelectedFilter={setSelectedFilter} setDirty={setDirty} setLoading={setLoading} />
+          <>
+            {loggedIn ? <MyAside open={open} setSelectedFilter={setSelectedFilter} setDirty={setDirty} setLoading={setLoading} /> : <></>}
+          </>
           <Switch>
+
+            {/* in order to use the redirect to login in other paths I've to define first the login route */}
+            <Route exact path="/login">
+              <>{loggedIn ? <Redirect to="/" /> : <LoginForm login={doLogIn} />}</>
+            </Route>
             <Route path="/:filterName" render={({ match }) =>
-              (<MyMainContent tasks={tasks} filter={match.params.filterName} deleteTask={deleteTask} editTask={editTask} setCompletedTask={setCompletedTask} loading={loading}/>)
+              <>
+                {loggedIn ?
+                  <MyMainContent tasks={tasks} filter={match.params.filterName} deleteTask={deleteTask} editTask={editTask} setCompletedTask={setCompletedTask} loading={loading} />
+                  : <Redirect to="/login" />
+                }
+              </>
             } />
             <Route exact path="/" render={() =>
-              <MyMainContent tasks={tasks} filter={"All"} deleteTask={deleteTask} editTask={editTask} setCompletedTask={setCompletedTask} loading={loading}/>
+              <>
+                {loggedIn ? <MyMainContent tasks={tasks} filter={"All"} deleteTask={deleteTask} editTask={editTask} setCompletedTask={setCompletedTask} loading={loading} /> : <Redirect to="/login" />
+                }
+              </>
             } />
           </Switch>
         </Row>
-        <MyModal show={show} handleClose={handleClose} addTask={addTask} lastId={lastId} setLastId={setLastId} />
-        <button className="btn btn-lg btn-primary rounded-circle radius" variant="primary" onClick={() => { handleShow() }}>+</button>
+        <>
+          {loggedIn ? <><MyModal show={show} handleClose={handleClose} addTask={addTask} lastId={lastId} setLastId={setLastId} />
+            <button className="btn btn-lg btn-primary rounded-circle radius" variant="primary" onClick={() => { handleShow() }}>+</button></> : <></>}
+        </>
       </Container>
     </Router>
 

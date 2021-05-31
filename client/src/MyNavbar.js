@@ -20,7 +20,12 @@ function MyNavbar(props) {
                     <FormControl type="text" placeholder="Search" className="mr-sm-2 mt-1 mt-sm-0" />
                     <Button variant="outline-light" className="my-2 my-sm-0">Search</Button>
                 </Form>
-
+                <Navbar.Text className="mr-2 text-white">
+                    {props.loggedIn ? props.message.msg : ""}
+                </Navbar.Text>
+                <>
+                {props.loggedIn ? <Button variant="outline-light" className="my-2 my-sm-0 mr-2" onClick={props.logout}>Logout</Button> : <></>}
+                </>
                 <Nav className="mt-0 mt-lg-0 user-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="white" className="bi bi-person-circle" viewBox="0 0 16 16">
                         <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
@@ -31,6 +36,5 @@ function MyNavbar(props) {
         </>
     );
 }
-
 
 export default MyNavbar;
