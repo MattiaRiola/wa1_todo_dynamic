@@ -43,7 +43,7 @@ function LoginForm(props) {
             </Form.Group>
             <Form.Group controlId='password'>
               <Form.Label>Password</Form.Label>
-              <Form.Control required type='password' value={password} onChange={ev => setPassword(ev.target.value)} />
+              <Form.Control required type='password' placeholder="Insert password here" value={password} onChange={ev => setPassword(ev.target.value)} />
             </Form.Group>
             <Button onClick={handleSubmit}>Login</Button>
           </Form>
