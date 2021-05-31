@@ -76,6 +76,10 @@ function App() {
         });
         setTasks(marshallResult);
         setLoading(false);
+      }).catch(err => {
+        console.log(err);
+        setTasks([]);
+        setLoading(false);
       });
     }
 
@@ -83,7 +87,7 @@ function App() {
 
   // Rehydrate tasks at mount time, and when tasks are updated
   useEffect(() => {
-    if (tasks.length && dirty && loggedIn) {
+    if (dirty && loggedIn) {
       //console.log("aggiorno da rehydrate, dirty: ", dirty, " tasks.length: ", tasks.length );
       API.getFilteredTasks(selectedFilter).then(newT => {
         let marshallResult = [];
@@ -94,7 +98,14 @@ function App() {
         setTasks(marshallResult);
         setLoading(false);
       })
-        .catch(err => { console.log(err); setLoading(false) });
+        .catch(err => {
+          console.log(err);
+          //this must be the right order in this way I wont send more than 1 request to the server
+          // setting Dirty the if will be false
+          setDirty(false);
+          setTasks([]);
+          setLoading(false);
+        });
     }
   }, [tasks.length, dirty, selectedFilter, loggedIn]);
 
@@ -167,7 +178,7 @@ function App() {
 
   return (
     <Router>
-      <MyNavbar setOpen={setOpen} open={open} message={message} logout={doLogOut} loggedIn={loggedIn}/>
+      <MyNavbar setOpen={setOpen} open={open} message={message} logout={doLogOut} loggedIn={loggedIn} />
       <Container fluid>
         <Row className="row-height">
           <>

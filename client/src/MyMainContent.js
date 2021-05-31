@@ -40,7 +40,7 @@ function MyMainContent(props) {
       <Col className="py-2 px-lg-3 border bg-light" id="menu-filter">
         <Title filter={props.filter} loading={props.loading} />
         {props.loading ? "" :
-          (<TaskTable tasks={props.tasks} filter={props.filter} deleteTask={props.deleteTask} editTask={props.editTask} setCompletedTask={props.setCompletedTask} />)}
+          (<TaskTable tasks={props.tasks} deleteTask={props.deleteTask} editTask={props.editTask} setCompletedTask={props.setCompletedTask} />)}
 
       </Col>
     </>
@@ -58,7 +58,7 @@ function TaskTable(props) {
   return (
     <>
       <ListGroup as="ul" variant="flush">
-        {props.tasks.filter(myMap.get(props.filter)).map(task => <TaskRow
+        {props.tasks.map(task => <TaskRow
           key={task.id}
           id={task.id}
           description={task.description}
