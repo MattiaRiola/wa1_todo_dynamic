@@ -434,6 +434,10 @@ app.get('/api/sessions/current', (req, res) => {
 });
 
 
-
+// If i get here, it is an unknown route
+// Ref: https://stackoverflow.com/questions/11500204/how-can-i-get-express-js-to-404-only-on-missing-routes
+app.use(function (req, res) {
+    res.status(404).json({error: 'Not found!'});
+});
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}/`));
