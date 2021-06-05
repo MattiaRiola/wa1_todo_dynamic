@@ -25,7 +25,7 @@ function unmarshallTask(task) {
         isPrivate: task.private ? 1 : 0,
         deadline: task.date !== undefined ? task.date.format('YYYY-MM-DD HH:mm') : "",
         completed: task.completed ? 1 : 0,
-        user: 1
+        user: task.user  // It is added but NOT USED to avoid user changing UserID when adding new tasks.
     }
     return taskServer;
 }
@@ -165,7 +165,7 @@ async function logOut() {
 }
 
 async function getUserInfo() {
-    const response = await fetch('/sessions/current');
+    const response = await fetch('api/sessions/current');
     const userInfo = await response.json();
     if (response.ok) {
         return userInfo;
@@ -176,7 +176,7 @@ async function getUserInfo() {
 
 
 
-const API = { addNewTask, marshallTask, unmarshallTask, getFilteredTasks, deleteTask, editTask, setCompletedTask, logIn, logOut };
+const API = { addNewTask, marshallTask, unmarshallTask, getFilteredTasks, deleteTask, editTask, setCompletedTask, logIn, logOut, getUserInfo };
 
 
 export default API;

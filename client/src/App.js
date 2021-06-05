@@ -66,6 +66,16 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(false); // at the beginning, no user is logged in
   const [message, setMessage] = useState('');
 
+  /** Ask server if user is logged in everytime the page is mounted. This information is stored in the cookie of the session */
+  useEffect(() => {
+        API.getUserInfo().then(user => {    /* Se sono nel then, l'utente è loggato (l'API ritorna un oggetto contenente user info) */
+            setLoggedIn(true);
+            setMessage({ msg: `Welcome, ${user.name}!`, type: 'success' });  // we set it again here because otherwise when F5 the message created from LogIn disappears
+        }).catch(error => {
+          setLoggedIn(false);              /* Se sono nella catch l'API non ha restituito un utente, dunque non è loggato */
+        });
+  }, []); // only at mount time
+
   //Rehydrate tasks at mount time
   useEffect(() => {
     if (loggedIn) {
